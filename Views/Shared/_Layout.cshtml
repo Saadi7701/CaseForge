@@ -1,0 +1,135 @@
+@using Microsoft.AspNetCore.Identity
+@using CaseForgeAI.Core.Entities.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - CaseForge AI</title>
+    
+    <!-- Fonts: Cinzel (Luxury old money serif) & Inter (Clean UI sans-serif) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- TailWind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['Cinzel', 'serif'],
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        noir: {
+                            obsidian: '#090A0B',
+                            charcoal: '#111215',
+                            gold: '#D4AF37',
+                            brass: '#C5A880',
+                            bronze: '#8E7544',
+                            forest: '#12221A',
+                            emerald: '#1C3528',
+                            ivory: '#F5EFEB'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <!-- Custom site CSS rules (neon glow, custom scrollbars, animations) -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="bg-noir-obsidian text-noir-ivory font-sans min-h-screen flex flex-col relative overflow-x-hidden selection:bg-noir-gold selection:text-noir-obsidian">
+    
+    <!-- Atmospheric Particle/Fog Canvas Background -->
+    <canvas id="fogCanvas" class="fixed top-0 left-0 w-full h-full pointer-events-none z-0 opacity-40"></canvas>
+
+    <!-- Glassmorphic Header -->
+    <header class="w-full sticky top-0 z-50 bg-noir-charcoal/70 backdrop-blur-md border-b border-noir-gold/20 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            
+            <!-- Logo / Brand -->
+            <a asp-controller="Home" asp-action="Index" class="flex items-center space-x-3 group">
+                <i class="fa-solid fa-magnifying-glass-chart text-noir-gold text-2xl group-hover:scale-110 transition duration-300"></i>
+                <span class="font-serif text-xl tracking-widest text-noir-gold font-bold group-hover:text-white transition duration-300">
+                    CASEFORGE <span class="text-white font-sans text-xs tracking-normal bg-noir-gold/20 px-2 py-0.5 rounded border border-noir-gold/30 ml-1">AI</span>
+                </span>
+            </a>
+
+            <!-- Nav Links -->
+            <nav class="hidden md:flex space-x-8 text-sm font-semibold tracking-wider uppercase font-serif">
+                <a asp-controller="Home" asp-action="Index" class="text-noir-brass hover:text-white transition py-2 border-b-2 border-transparent hover:border-noir-gold">Lobby</a>
+                @if (SignInManager.IsSignedIn(User))
+                {
+                    if (User.IsInRole("Admin"))
+                    {
+                        <a asp-controller="Admin" asp-action="Index" class="text-noir-brass hover:text-white transition py-2 border-b-2 border-transparent hover:border-noir-gold">AI Editor</a>
+                        <a asp-controller="Dashboard" asp-action="Index" class="text-noir-brass hover:text-white transition py-2 border-b-2 border-transparent hover:border-noir-gold">Analytics</a>
+                    }
+                }
+            </nav>
+
+            <!-- Authentication Section -->
+            <div class="flex items-center space-x-4">
+                @if (SignInManager.IsSignedIn(User))
+                {
+                    var currentUser = await UserManager.GetUserAsync(User);
+                    <div class="hidden sm:flex flex-col items-end mr-2 text-right">
+                        <span class="text-xs text-noir-brass">@currentUser?.DetectiveRank</span>
+                        <span class="text-sm font-semibold text-white">@currentUser?.FullName</span>
+                        <span class="text-[10px] text-noir-gold"><i class="fa-solid fa-medal mr-1"></i>Score: @currentUser?.TotalScore</span>
+                    </div>
+                    
+                    <a asp-controller="Account" asp-action="Logout" class="px-4 py-2 border border-noir-gold/40 rounded text-xs font-serif uppercase tracking-widest text-noir-gold hover:bg-noir-gold hover:text-noir-obsidian hover:shadow-[0_0_15px_rgba(212,175,55,0.4)] transition duration-300">
+                        Sign Out
+                    </a>
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="Login" class="text-xs font-serif uppercase tracking-widest text-noir-brass hover:text-white transition duration-300">
+                        Login
+                    </a>
+                    <a asp-controller="Account" asp-action="Register" class="px-4 py-2 bg-gradient-to-r from-noir-bronze to-noir-gold text-noir-obsidian text-xs font-serif font-bold uppercase tracking-widest rounded hover:shadow-[0_0_15px_rgba(212,175,55,0.5)] hover:scale-105 transition duration-300">
+                        Enlist
+                    </a>
+                }
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main role="main" class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+        @RenderBody()
+    </main>
+
+    <!-- Cinematic Footer -->
+    <footer class="bg-noir-charcoal/80 border-t border-noir-gold/15 py-8 mt-12 relative z-10 text-center text-xs text-noir-brass tracking-wider">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
+            <span class="font-serif uppercase font-semibold">&copy; 2026 CASEFORGE AI. ALL RIGHTS RESERVED.</span>
+            <div class="flex space-x-6">
+                <a href="#" class="hover:text-white transition"><i class="fa-brands fa-github text-lg"></i></a>
+                <a href="#" class="hover:text-white transition"><i class="fa-brands fa-discord text-lg"></i></a>
+            </div>
+            <span class="text-[10px] uppercase font-sans text-noir-gold/50">Designed in Old Money Aesthetic &bull; Noir-Cinematic Theme</span>
+        </div>
+    </footer>
+
+    <!-- GSAP for Smooth Animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <!-- Canvas Fog Animation and Site Logic -->
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

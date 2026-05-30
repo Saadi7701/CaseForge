@@ -1,0 +1,107 @@
+@model CaseForgeAI.Controllers.RegisterInputModel
+@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="flex justify-center items-center py-16">
+    <div id="registerPanel" class="glass-panel rounded-xl p-10 w-full max-w-md border border-noir-gold/20 space-y-6 opacity-0">
+
+        <!-- Header -->
+        <div class="text-center space-y-3">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-noir-gold/10 border border-noir-gold/30 mb-2">
+                <i class="fa-solid fa-id-badge text-noir-gold text-3xl"></i>
+            </div>
+            <h1 class="font-serif text-3xl tracking-widest text-noir-gold font-bold">ENLIST AS DETECTIVE</h1>
+            <p class="text-xs text-noir-brass tracking-wider uppercase font-serif">Join the Bureau &bull; Solve the Unsolvable</p>
+            <div class="w-16 h-px bg-gradient-to-r from-transparent via-noir-gold/50 to-transparent mx-auto"></div>
+        </div>
+
+        <!-- Validation Summary -->
+        <div asp-validation-summary="ModelOnly" class="text-red-400 text-xs text-center"></div>
+
+        <!-- Registration Form -->
+        <form asp-action="Register" method="post" class="space-y-5">
+
+            <!-- Full Name -->
+            <div class="form-field">
+                <label asp-for="FullName" class="text-xs uppercase tracking-widest text-noir-brass font-serif">Full Name</label>
+                <div class="relative mt-1">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-noir-brass/50 text-sm"><i class="fa-solid fa-signature"></i></span>
+                    <input asp-for="FullName" type="text"
+                           class="w-full pl-10 pr-4 py-3 bg-noir-obsidian/80 border border-noir-gold/20 rounded text-noir-ivory placeholder:text-noir-brass/40 focus:border-noir-gold focus:outline-none focus:shadow-[0_0_10px_rgba(212,175,55,0.2)] transition text-sm"
+                           placeholder="Inspector Lestrade" />
+                </div>
+                <span asp-validation-for="FullName" class="text-red-400 text-xs"></span>
+            </div>
+
+            <!-- Email -->
+            <div class="form-field">
+                <label asp-for="Email" class="text-xs uppercase tracking-widest text-noir-brass font-serif">Email Address</label>
+                <div class="relative mt-1">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-noir-brass/50 text-sm"><i class="fa-solid fa-envelope"></i></span>
+                    <input asp-for="Email" type="email"
+                           class="w-full pl-10 pr-4 py-3 bg-noir-obsidian/80 border border-noir-gold/20 rounded text-noir-ivory placeholder:text-noir-brass/40 focus:border-noir-gold focus:outline-none focus:shadow-[0_0_10px_rgba(212,175,55,0.2)] transition text-sm"
+                           placeholder="detective@caseforge.com" />
+                </div>
+                <span asp-validation-for="Email" class="text-red-400 text-xs"></span>
+            </div>
+
+            <!-- Password -->
+            <div class="form-field">
+                <label asp-for="Password" class="text-xs uppercase tracking-widest text-noir-brass font-serif">Password</label>
+                <div class="relative mt-1">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-noir-brass/50 text-sm"><i class="fa-solid fa-lock"></i></span>
+                    <input asp-for="Password" type="password"
+                           class="w-full pl-10 pr-4 py-3 bg-noir-obsidian/80 border border-noir-gold/20 rounded text-noir-ivory placeholder:text-noir-brass/40 focus:border-noir-gold focus:outline-none focus:shadow-[0_0_10px_rgba(212,175,55,0.2)] transition text-sm"
+                           placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
+                </div>
+                <span asp-validation-for="Password" class="text-red-400 text-xs"></span>
+            </div>
+
+            <!-- Submit -->
+            <button type="submit"
+                    class="w-full py-3 bg-gradient-to-r from-noir-bronze to-noir-gold text-noir-obsidian font-serif text-sm font-bold uppercase tracking-widest rounded hover:shadow-[0_0_20px_rgba(212,175,55,0.5)] hover:scale-[1.02] transition duration-300 flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-user-plus text-xs"></i>
+                <span>Enlist Now</span>
+            </button>
+        </form>
+
+        <!-- Login Link -->
+        <div class="text-center pt-2 border-t border-white/5">
+            <p class="text-xs text-noir-brass">Already enlisted? <a asp-action="Login" class="text-noir-gold hover:underline font-semibold">Sign in here</a></p>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+
+            // Panel entrance
+            tl.fromTo('#registerPanel',
+                { opacity: 0, y: 40, scale: 0.97 },
+                { opacity: 1, y: 0, scale: 1, duration: 0.8 }
+            );
+
+            // Stagger form fields
+            tl.fromTo('.form-field',
+                { opacity: 0, x: -20 },
+                { opacity: 1, x: 0, duration: 0.5, stagger: 0.12 },
+                '-=0.3'
+            );
+
+            // Gold glow pulse on the icon badge
+            gsap.to('#registerPanel .fa-id-badge', {
+                textShadow: '0 0 18px rgba(212,175,55,0.6)',
+                repeat: -1,
+                yoyo: true,
+                duration: 2,
+                ease: 'sine.inOut'
+            });
+        });
+    </script>
+}

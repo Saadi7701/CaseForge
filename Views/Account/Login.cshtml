@@ -1,0 +1,47 @@
+@model CaseForgeAI.Controllers.LoginInputModel
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="flex justify-center items-center py-16">
+    <div class="glass-panel rounded-xl p-10 w-full max-w-md border border-noir-gold/20 space-y-6">
+        <div class="text-center space-y-2">
+            <i class="fa-solid fa-user-shield text-noir-gold text-4xl"></i>
+            <h1 class="font-serif text-3xl tracking-widest text-noir-gold font-bold">SIGN IN</h1>
+            <p class="text-xs text-noir-brass tracking-wider uppercase font-serif">Enter the Bureau</p>
+        </div>
+
+        <div asp-validation-summary="ModelOnly" class="text-red-400 text-xs text-center"></div>
+
+        <form asp-action="Login" method="post" class="space-y-5">
+            <div>
+                <label class="text-xs uppercase tracking-widest text-noir-brass font-serif">Email Address</label>
+                <input asp-for="Email" type="email" class="w-full mt-1 px-4 py-3 bg-noir-obsidian/80 border border-noir-gold/20 rounded text-noir-ivory placeholder:text-noir-brass/40 focus:border-noir-gold focus:outline-none focus:shadow-[0_0_10px_rgba(212,175,55,0.2)] transition text-sm" placeholder="detective@caseforge.com" />
+                <span asp-validation-for="Email" class="text-red-400 text-xs"></span>
+            </div>
+            <div>
+                <label class="text-xs uppercase tracking-widest text-noir-brass font-serif">Password</label>
+                <input asp-for="Password" type="password" class="w-full mt-1 px-4 py-3 bg-noir-obsidian/80 border border-noir-gold/20 rounded text-noir-ivory placeholder:text-noir-brass/40 focus:border-noir-gold focus:outline-none focus:shadow-[0_0_10px_rgba(212,175,55,0.2)] transition text-sm" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
+                <span asp-validation-for="Password" class="text-red-400 text-xs"></span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <input asp-for="RememberMe" type="checkbox" class="accent-noir-gold w-4 h-4" />
+                <label class="text-xs text-noir-brass">Remember me on this device</label>
+            </div>
+            <button type="submit" class="w-full py-3 bg-gradient-to-r from-noir-bronze to-noir-gold text-noir-obsidian font-serif text-sm font-bold uppercase tracking-widest rounded hover:shadow-[0_0_20px_rgba(212,175,55,0.5)] hover:scale-[1.02] transition duration-300">
+                Enter Bureau
+            </button>
+        </form>
+
+        <div class="text-center pt-2 border-t border-white/5">
+            <p class="text-xs text-noir-brass">Not yet enlisted? <a asp-action="Register" class="text-noir-gold hover:underline font-semibold">Register here</a></p>
+        </div>
+
+        <!-- Quick Login Hint -->
+        <div class="text-center mt-4 p-3 bg-noir-emerald/30 rounded border border-noir-gold/10">
+            <p class="text-[10px] text-noir-brass uppercase tracking-widest font-serif mb-1">Demo Accounts</p>
+            <p class="text-[10px] text-noir-ivory/60">Admin: admin@caseforge.com / NoirAdmin123!</p>
+            <p class="text-[10px] text-noir-ivory/60">Player: player@caseforge.com / Player123!</p>
+        </div>
+    </div>
+</div>

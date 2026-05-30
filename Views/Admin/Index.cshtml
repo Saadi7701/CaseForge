@@ -1,0 +1,232 @@
+@model List<CaseForgeAI.Core.Entities.CaseStory>
+@{
+    ViewData["Title"] = "AI Case Editor";
+}
+
+<div class="space-y-10">
+
+    <!-- ═══════════════════ Page Header ═══════════════════ -->
+    <div class="text-center py-8 space-y-4">
+        <h1 class="font-serif text-4xl md:text-5xl font-bold tracking-widest text-noir-gold text-glow-gold">
+            AI CASE EDITOR
+        </h1>
+        <p class="text-noir-brass text-sm tracking-widest uppercase font-serif">
+            Manage, review &amp; publish AI‑generated mystery case files
+        </p>
+        <div class="w-24 h-[1px] bg-gradient-to-r from-transparent via-noir-gold to-transparent mx-auto"></div>
+    </div>
+
+    <!-- ═══════════════════ TempData Alerts ═══════════════════ -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div id="alertSuccess"
+             class="glass-panel rounded-lg px-6 py-4 border border-green-500/30 flex items-center space-x-3 animate-fade-in">
+            <i class="fa-solid fa-circle-check text-green-400 text-xl"></i>
+            <span class="text-green-300 text-sm font-sans">@TempData["SuccessMessage"]</span>
+            <button onclick="document.getElementById('alertSuccess').remove()"
+                    class="ml-auto text-green-400/60 hover:text-white transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div id="alertError"
+             class="glass-panel rounded-lg px-6 py-4 border border-red-500/30 flex items-center space-x-3 animate-fade-in">
+            <i class="fa-solid fa-triangle-exclamation text-red-400 text-xl"></i>
+            <span class="text-red-300 text-sm font-sans">@TempData["ErrorMessage"]</span>
+            <button onclick="document.getElementById('alertError').remove()"
+                    class="ml-auto text-red-400/60 hover:text-white transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+    }
+
+    <!-- ═══════════════════ Toolbar ═══════════════════ -->
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center space-x-3 text-noir-brass text-sm font-sans">
+            <i class="fa-solid fa-database text-noir-gold"></i>
+            <span>
+                <strong class="text-white">@Model.Count</strong>
+                Case @(Model.Count == 1 ? "File" : "Files") in Archive
+            </span>
+        </div>
+
+        <a asp-action="Create"
+           class="group inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-noir-bronze to-noir-gold text-noir-obsidian font-serif text-xs font-bold uppercase tracking-widest rounded hover:shadow-[0_0_20px_rgba(212,175,55,0.5)] hover:scale-105 transition duration-300">
+            <i class="fa-solid fa-wand-magic-sparkles group-hover:rotate-12 transition-transform duration-300"></i>
+            <span>Generate New Case</span>
+        </a>
+    </div>
+
+    <!-- ═══════════════════ Case Story Grid ═══════════════════ -->
+    @if (Model.Any())
+    {
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8" id="caseGrid">
+            @foreach (var story in Model)
+            {
+                <div class="case-card leather-card rounded-lg p-6 flex flex-col justify-between group border-l-4 @(story.IsPublished ? "border-l-green-500" : "border-l-noir-brass/40")">
+
+                    <!-- Card Header -->
+                    <div class="space-y-3">
+                        <!-- Top Badges Row -->
+                        <div class="flex items-center justify-between flex-wrap gap-2">
+                            <!-- Difficulty Badge -->
+                            @{
+                                var diffColor = story.Difficulty switch
+                                {
+                                    "Easy"   => "text-emerald-400 bg-emerald-400/10 border-emerald-400/30",
+                                    "Hard"   => "text-red-400 bg-red-400/10 border-red-400/30",
+                                    _        => "text-amber-400 bg-amber-400/10 border-amber-400/30"
+                                };
+                            }
+                            <span class="px-2.5 py-0.5 rounded text-[10px] uppercase font-serif tracking-widest border @diffColor">
+                                <i class="fa-solid fa-signal mr-1"></i>@story.Difficulty
+                            </span>
+
+                            <!-- Published Status -->
+                            @if (story.IsPublished)
+                            {
+                                <span class="px-2.5 py-0.5 rounded text-[10px] uppercase font-serif tracking-widest text-green-400 bg-green-400/10 border border-green-400/30">
+                                    <i class="fa-solid fa-globe mr-1"></i>Published
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="px-2.5 py-0.5 rounded text-[10px] uppercase font-serif tracking-widest text-noir-brass bg-noir-brass/10 border border-noir-brass/20">
+                                    <i class="fa-solid fa-pen-ruler mr-1"></i>Draft
+                                </span>
+                            }
+                        </div>
+
+                        <!-- Title -->
+                        <h3 class="font-serif text-lg font-bold text-white group-hover:text-noir-gold transition leading-snug">
+                            @story.Title
+                        </h3>
+
+                        <!-- Victim -->
+                        <p class="text-noir-brass text-xs font-serif italic">
+                            <i class="fa-solid fa-skull mr-1 text-noir-gold/50"></i>Victim: @story.VictimName
+                        </p>
+                    </div>
+
+                    <!-- Card Metadata -->
+                    <div class="mt-4 space-y-3">
+                        <!-- Stats Row -->
+                        <div class="grid grid-cols-3 gap-2 text-center">
+                            <!-- Quality Score -->
+                            <div class="glass-panel rounded-md py-2 px-1 border border-noir-gold/10">
+                                <div class="text-noir-gold font-serif font-bold text-sm">@story.QualityScore.ToString("F1")</div>
+                                <div class="text-[9px] text-noir-brass uppercase tracking-wider mt-0.5">Quality</div>
+                            </div>
+                            <!-- Versions -->
+                            <div class="glass-panel rounded-md py-2 px-1 border border-noir-gold/10">
+                                <div class="text-white font-serif font-bold text-sm">@story.Versions.Count</div>
+                                <div class="text-[9px] text-noir-brass uppercase tracking-wider mt-0.5">Versions</div>
+                            </div>
+                            <!-- Created Date -->
+                            <div class="glass-panel rounded-md py-2 px-1 border border-noir-gold/10">
+                                <div class="text-white font-serif font-bold text-[11px]">@story.CreatedAt.ToString("MMM dd")</div>
+                                <div class="text-[9px] text-noir-brass uppercase tracking-wider mt-0.5">@story.CreatedAt.ToString("yyyy")</div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="pt-3 border-t border-white/5 flex items-center justify-between gap-2">
+                            <a asp-action="Review" asp-route-id="@story.Id"
+                               class="flex-1 text-center px-3 py-2 bg-noir-gold/10 text-noir-gold text-xs font-serif font-bold uppercase tracking-widest rounded border border-noir-gold/20 hover:bg-noir-gold hover:text-noir-obsidian hover:shadow-[0_0_15px_rgba(212,175,55,0.4)] transition duration-300">
+                                <i class="fa-solid fa-magnifying-glass-chart mr-1"></i>Review
+                            </a>
+
+                            <form asp-action="DeleteCase" method="post"
+                                  onsubmit="return confirm('⚠️ Permanently delete this case file? This action cannot be undone.');"
+                                  class="flex-shrink-0">
+                                <input type="hidden" name="id" value="@story.Id" />
+                                <button type="submit"
+                                        class="px-3 py-2 text-xs font-serif uppercase tracking-widest rounded border border-red-500/20 text-red-400/70 hover:bg-red-500/20 hover:text-red-300 hover:border-red-500/40 transition duration-300">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <!-- ═══════════════════ Empty State ═══════════════════ -->
+        <div class="glass-panel rounded-lg p-16 text-center border border-noir-gold/10 space-y-6" id="emptyState">
+            <div class="relative inline-block">
+                <i class="fa-solid fa-wand-magic-sparkles text-noir-gold/20 text-7xl"></i>
+                <div class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-noir-gold/30 animate-ping"></div>
+            </div>
+            <h3 class="font-serif text-xl text-white tracking-wider">No Case Files in the Archive</h3>
+            <p class="text-noir-brass text-sm font-sans max-w-md mx-auto leading-relaxed">
+                The evidence vault is empty. Use the AI generator to conjure a new murder mystery from
+                the depths of the forensic engine.
+            </p>
+            <a asp-action="Create"
+               class="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-noir-bronze to-noir-gold text-noir-obsidian font-serif text-xs font-bold uppercase tracking-widest rounded hover:shadow-[0_0_20px_rgba(212,175,55,0.5)] hover:scale-105 transition duration-300">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <span>Generate Your First Case</span>
+            </a>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // ── GSAP Entrance Animations ──
+        document.addEventListener('DOMContentLoaded', () => {
+            // Page heading
+            gsap.from('h1', {
+                duration: 1,
+                y: -30,
+                opacity: 0,
+                ease: 'power3.out'
+            });
+
+            // Stagger the case cards
+            const cards = document.querySelectorAll('.case-card');
+            if (cards.length) {
+                gsap.from(cards, {
+                    duration: 0.6,
+                    y: 40,
+                    opacity: 0,
+                    stagger: 0.1,
+                    ease: 'power2.out',
+                    delay: 0.3
+                });
+            }
+
+            // Empty state
+            const emptyState = document.getElementById('emptyState');
+            if (emptyState) {
+                gsap.from(emptyState, {
+                    duration: 0.8,
+                    scale: 0.95,
+                    opacity: 0,
+                    ease: 'back.out(1.7)',
+                    delay: 0.4
+                });
+            }
+
+            // Auto-dismiss alerts after 6 seconds
+            ['alertSuccess', 'alertError'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    gsap.to(el, {
+                        opacity: 0,
+                        y: -10,
+                        duration: 0.4,
+                        delay: 6,
+                        ease: 'power2.in',
+                        onComplete: () => el.remove()
+                    });
+                }
+            });
+        });
+    </script>
+}
