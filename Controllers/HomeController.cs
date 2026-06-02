@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -20,9 +21,21 @@ namespace CaseForgeAI.Controllers
 
         public async Task<IActionResult> Index()
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
             // Retrieve published stories
-            var stories = await _context.Stories
-                .Where(s => s.IsPublished)
+            // Filter out stories that the current user has already completed
+            var storiesQuery = _context.Stories
+                .Where(s => s.IsPublished);
+
+            if (!string.IsNullOrEmpty(userId))
+            {
+                storiesQuery = storiesQuery.Where(s => 
+                    !_context.PlayerProgresses.Any(p => p.StoryId == s.Id && p.UserId == userId && p.IsCompleted)
+                );
+            }
+
+            var stories = await storiesQuery
                 .Include(s => s.Suspects)
                 .Include(s => s.Clues)
                 .Include(s => s.Puzzles)
@@ -49,6 +62,20 @@ namespace CaseForgeAI.Controllers
             };
 
             return View(viewModel);
+        }
+
+        [Microsoft.AspNetCore.Authorization.Authorize]
+        public async Task<IActionResult> History()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            
+            var completedProgress = await _context.PlayerProgresses
+                .Include(p => p.Story)
+                .Where(p => p.UserId == userId && p.IsCompleted)
+                .OrderByDescending(p => p.LastSavedAt)
+                .ToListAsync();
+
+            return View(completedProgress);
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

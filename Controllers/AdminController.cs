@@ -41,7 +41,7 @@ namespace CaseForgeAI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GenerateCase(string prompt, string model)
+        public async Task<IActionResult> GenerateCase(string prompt)
         {
             if (string.IsNullOrWhiteSpace(prompt))
             {
@@ -52,7 +52,7 @@ namespace CaseForgeAI.Controllers
             try
             {
                 // 1. Generate story JSON using AIService
-                string jsonResult = await _aiService.GenerateStoryJsonAsync(prompt, model);
+                string jsonResult = await _aiService.GenerateStoryJsonAsync(prompt);
 
                 // 2. Parse title/victim to create a draft CaseStory
                 using var doc = JsonDocument.Parse(jsonResult);
@@ -115,7 +115,7 @@ namespace CaseForgeAI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> RefineCase(Guid id, string feedbackPrompt, string model)
+        public async Task<IActionResult> RefineCase(Guid id, string feedbackPrompt)
         {
             var story = await _context.Stories
                 .Include(s => s.Versions)
@@ -129,7 +129,7 @@ namespace CaseForgeAI.Controllers
             try
             {
                 // Call AI Service to refine the JSON
-                string refinedJson = await _aiService.RefineStoryJsonAsync(latestVersion.ContentJson, feedbackPrompt, model);
+                string refinedJson = await _aiService.RefineStoryJsonAsync(latestVersion.ContentJson, feedbackPrompt);
 
                 // Add new version
                 var nextVersionNum = latestVersion.VersionNumber + 1;
@@ -229,6 +229,7 @@ namespace CaseForgeAI.Controllers
                             LocationName = c.GetProperty("locationName").GetString() ?? "Crime Scene",
                             ClueType = c.GetProperty("clueType").GetString() ?? "Physical",
                             IsHidden = c.TryGetProperty("isHidden", out var hid) && hid.GetBoolean(),
+                            IsCorrect = c.TryGetProperty("isCorrect", out var corr) && corr.GetBoolean(),
                             ConnectionInfo = c.TryGetProperty("connectionInfo", out var conn) ? conn.GetString() ?? "" : "",
                             HotspotX = c.TryGetProperty("hotspotX", out var xVal) ? xVal.GetInt32() : 50,
                             HotspotY = c.TryGetProperty("hotspotY", out var yVal) ? yVal.GetInt32() : 50
