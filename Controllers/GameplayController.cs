@@ -29,6 +29,10 @@ namespace CaseForgeAI.Controllers
             if (string.IsNullOrEmpty(userId)) return Challenge();
 
             var progress = await _gameplayService.StartCaseAsync(id, userId);
+            
+            if (progress.IsCompleted) 
+                return RedirectToAction("Outcome", new { id = progress.Id });
+
             return RedirectToAction("Investigation", new { id = progress.Id });
         }
 
@@ -37,6 +41,7 @@ namespace CaseForgeAI.Controllers
         {
             var progress = await GetProgressWithRelationsAsync(id);
             if (progress == null) return NotFound();
+            if (progress.IsCompleted) return RedirectToAction("Outcome", new { id = id });
 
             // Set current stage
             progress.CurrentStage = "Investigation";
@@ -63,6 +68,7 @@ namespace CaseForgeAI.Controllers
         {
             var progress = await GetProgressWithRelationsAsync(id);
             if (progress == null) return NotFound();
+            if (progress.IsCompleted) return RedirectToAction("Outcome", new { id = id });
 
             progress.CurrentStage = "Interrogation";
             progress.LastSavedAt = DateTime.UtcNow;
@@ -92,6 +98,7 @@ namespace CaseForgeAI.Controllers
         {
             var progress = await GetProgressWithRelationsAsync(id);
             if (progress == null) return NotFound();
+            if (progress.IsCompleted) return RedirectToAction("Outcome", new { id = id });
 
             progress.CurrentStage = "EvidenceBoard";
             progress.LastSavedAt = DateTime.UtcNow;
@@ -129,6 +136,7 @@ namespace CaseForgeAI.Controllers
         {
             var progress = await GetProgressWithRelationsAsync(id);
             if (progress == null) return NotFound();
+            if (progress.IsCompleted) return RedirectToAction("Outcome", new { id = id });
 
             progress.CurrentStage = "Puzzles";
             progress.LastSavedAt = DateTime.UtcNow;
@@ -156,6 +164,7 @@ namespace CaseForgeAI.Controllers
         {
             var progress = await GetProgressWithRelationsAsync(id);
             if (progress == null) return NotFound();
+            if (progress.IsCompleted) return RedirectToAction("Outcome", new { id = id });
 
             progress.CurrentStage = "Accusation";
             progress.LastSavedAt = DateTime.UtcNow;

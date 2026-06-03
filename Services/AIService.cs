@@ -132,6 +132,7 @@ namespace CaseForgeAI.Services
         private static string GetSystemPrompt()
         {
             return @"You are a master mystery writer. Generate a complete detective mystery case in JSON format.
+IMPORTANT: Use simple, easy-to-understand everyday English. Avoid overly complex words or confusing sentence structures so that anyone can easily read the story, clues, and suspect descriptions.
 You MUST output ONLY a valid JSON object. No markdown tags, no wrap around text, no starting with ```json.
 The JSON object must contain the following keys exactly:
 {

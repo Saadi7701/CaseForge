@@ -185,6 +185,11 @@ namespace CaseForgeAI.Services
             if (suspect == null || suspect.StoryId != progress.StoryId) 
                 return new AccusationResult { Success = false, Message = "Suspect not found." };
 
+            if (progress.IsCompleted)
+            {
+                return new AccusationResult { Success = false, Message = "Case already concluded." };
+            }
+
             progress.LastSavedAt = DateTime.UtcNow;
             progress.IsCompleted = true;
 
@@ -230,13 +235,16 @@ namespace CaseForgeAI.Services
                 progress.CurrentStage = "Finished";
                 progress.Score = 0; // Failed cases get 0 score
 
+                var trueKiller = progress.Story?.Suspects?.FirstOrDefault(s => s.IsKiller);
+                string trueKillerName = trueKiller?.Name ?? "Unknown";
+
                 await _context.SaveChangesAsync();
 
                 return new AccusationResult
                 {
                     Success = false,
                     Message = "Wrong Accusation!",
-                    Details = $"You accused {suspect.Name}, but they had a solid alibi. The true killer escaped, leaving the department in disgrace."
+                    Details = $"You accused {suspect.Name}, but they were innocent. The true killer was {trueKillerName}. Here is what really happened: {progress.Story?.Ending}"
                 };
             }
         }

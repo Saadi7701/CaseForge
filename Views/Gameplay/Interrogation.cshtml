@@ -197,16 +197,29 @@
                             <!-- Divider -->
                             <div class="w-full h-px bg-gradient-to-r from-transparent via-noir-gold/15 to-transparent"></div>
 
-                            <!-- Interrogate button -->
-                            <button onclick="interrogateSuspect('@suspect.Id', '@suspect.Name.Replace("'", "\\'")' )"
-                                    class="interrogate-btn w-full flex items-center justify-center gap-2.5 py-3 rounded-lg text-xs font-serif uppercase tracking-[0.2em]
-                                           border border-noir-gold/20 bg-noir-gold/5 text-noir-gold
-                                           hover:bg-noir-gold hover:text-noir-obsidian hover:shadow-[0_0_25px_rgba(212,175,55,0.25)]
-                                           active:scale-95 transition-all duration-300 group/btn">
-                                <i class="fa-solid fa-microphone group-hover/btn:animate-pulse"></i>
-                                <span>Interrogate</span>
-                                <i class="fa-solid fa-chevron-right text-[8px] opacity-50 group-hover/btn:translate-x-1 transition-transform duration-300"></i>
-                            </button>
+                            <!-- Interrogate and Accuse buttons -->
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="interrogateSuspect('@suspect.Id', '@suspect.Name.Replace("'", "\\'")' )"
+                                        class="interrogate-btn flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-serif uppercase tracking-[0.1em]
+                                               border border-noir-gold/20 bg-noir-gold/5 text-noir-gold
+                                               hover:bg-noir-gold hover:text-noir-obsidian active:scale-95 transition-all duration-300">
+                                    <i class="fa-solid fa-microphone"></i>
+                                    <span>Question</span>
+                                </button>
+                                
+                                <form asp-action="SubmitAccusation" method="post" class="m-0">
+                                    <input type="hidden" name="progressId" value="@Model.Id" />
+                                    <input type="hidden" name="suspectId" value="@suspect.Id" />
+                                    <button type="submit" 
+                                            class="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-serif uppercase tracking-[0.1em]
+                                                   border border-red-500/20 bg-red-500/5 text-red-400
+                                                   hover:bg-red-500 hover:text-white active:scale-95 transition-all duration-300"
+                                            onclick="return confirm('Are you sure you want to accuse @suspect.Name.Replace("'", "\\'")? This is your final decision!');">
+                                        <i class="fa-solid fa-gavel"></i>
+                                        <span>Accuse</span>
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 }
@@ -278,7 +291,7 @@
             <h2 class="font-serif text-xl tracking-wider text-noir-brass uppercase">Case Actions</h2>
         </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <!-- Investigation -->
             <a asp-action="Investigation" asp-route-id="@Model.Id"
                class="group flex flex-col items-center gap-3 p-5 rounded-xl border border-noir-gold/10 bg-noir-charcoal/50 backdrop-blur
@@ -307,16 +320,6 @@
                     <i class="fa-solid fa-puzzle-piece text-noir-gold"></i>
                 </div>
                 <span class="font-serif text-xs uppercase tracking-widest text-noir-brass group-hover:text-white transition-colors duration-300">Puzzles</span>
-            </a>
-
-            <!-- Accuse -->
-            <a asp-action="Accuse" asp-route-id="@Model.Id"
-               class="group flex flex-col items-center gap-3 p-5 rounded-xl border border-red-500/15 bg-noir-charcoal/50 backdrop-blur
-                      hover:border-red-500/30 hover:bg-red-950/20 transition-all duration-300">
-                <div class="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/15 flex items-center justify-center group-hover:bg-red-500/20 transition-colors duration-300">
-                    <i class="fa-solid fa-gavel text-red-400"></i>
-                </div>
-                <span class="font-serif text-xs uppercase tracking-widest text-red-400/80 group-hover:text-red-300 transition-colors duration-300">Make Accusation</span>
             </a>
         </div>
     </nav>
