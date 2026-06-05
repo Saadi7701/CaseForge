@@ -11,12 +11,12 @@ using CaseForgeAI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Connection String Setup (LocalDB is default for local Visual Studio run)
+// 1. Connection String Setup (Supabase PostgreSQL)
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? "Server=(localdb)\\mssqllocaldb;Database=CaseForgeAI;Trusted_Connection=True;MultipleActiveResultSets=true";
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseNpgsql(connectionString));
 
 // 2. Identity Service Configuration
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>

@@ -212,6 +212,10 @@ You MUST output ONLY a valid JSON object. No markdown tags, no wrap around text,
         {
             var cleaned = raw.Trim();
 
+            // Strip <think> tags completely (used by deepseek-r1)
+            var thinkRegex = new System.Text.RegularExpressions.Regex(@"<think>[\s\S]*?</think>", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            cleaned = thinkRegex.Replace(cleaned, "").Trim();
+
             // Strip markdown code fences
             if (cleaned.StartsWith("```json", StringComparison.OrdinalIgnoreCase))
             {
