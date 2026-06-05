@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -8,85 +10,85 @@ using CaseForgeAI.Core.Interfaces;
 
 namespace CaseForgeAI.Services
 {
-    public class GemmaStrategy : IOpenRouterStrategy
+    /// <summary>
+    /// Unified OpenRouter strategy that calls any model via the OpenRouter API.
+    /// Supports automatic fallback through a chain of free models.
+    /// </summary>
+    public class OpenRouterStrategy : IOpenRouterStrategy
     {
-        public string ModelName => "google/gemma-2-9b-it:free";
+        private readonly string _modelName;
+
+        public OpenRouterStrategy(string modelName)
+        {
+            _modelName = modelName;
+        }
+
+        public string ModelName => _modelName;
 
         public async Task<string> ExecutePromptAsync(string systemPrompt, string userPrompt, string apiKey, string baseUrl)
         {
-            return await CallOpenRouterAsync(ModelName, systemPrompt, userPrompt, apiKey, baseUrl);
-        }
-
-        private static async Task<string> CallOpenRouterAsync(string model, string systemPrompt, string userPrompt, string apiKey, string baseUrl)
-        {
             using var client = new HttpClient();
+            client.Timeout = TimeSpan.FromSeconds(120);
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
-            client.DefaultRequestHeaders.Add("HTTP-Referer", "https://github.com/Saadi7701/elite_rings");
+            client.DefaultRequestHeaders.Add("HTTP-Referer", "https://github.com/Saadi7701/CaseForge");
             client.DefaultRequestHeaders.Add("X-Title", "CaseForge AI");
 
             var requestBody = new
             {
-                model = model,
+                model = _modelName,
                 messages = new[]
                 {
                     new { role = "system", content = systemPrompt },
                     new { role = "user", content = userPrompt }
                 },
-                temperature = 0.7,
-                response_format = new { type = "json_object" }
+                temperature = 0.75,
+                max_tokens = 4096
             };
 
-            var jsonContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
+            var jsonContent = new StringContent(
+                JsonSerializer.Serialize(requestBody),
+                Encoding.UTF8,
+                "application/json"
+            );
+
             var response = await client.PostAsync($"{baseUrl}/chat/completions", jsonContent);
-            response.EnsureSuccessStatusCode();
 
-            var responseBody = await response.Content.ReadAsStringAsync();
-            using var doc = JsonDocument.Parse(responseBody);
-            var choice = doc.RootElement.GetProperty("choices")[0];
-            return choice.GetProperty("message").GetProperty("content").GetString() ?? string.Empty;
-        }
-    }
-
-    public class LlamaStrategy : IOpenRouterStrategy
-    {
-        public string ModelName => "meta-llama/llama-3-8b-instruct:free";
-
-        public async Task<string> ExecutePromptAsync(string systemPrompt, string userPrompt, string apiKey, string baseUrl)
-        {
-            // Reuses the HttpClient logic from Gemma or has custom formatting if needed
-            return await CallOpenRouterAsync(ModelName, systemPrompt, userPrompt, apiKey, baseUrl);
-        }
-
-        private static async Task<string> CallOpenRouterAsync(string model, string systemPrompt, string userPrompt, string apiKey, string baseUrl)
-        {
-            using var client = new HttpClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
-            client.DefaultRequestHeaders.Add("HTTP-Referer", "https://github.com/Saadi7701/elite_rings");
-            client.DefaultRequestHeaders.Add("X-Title", "CaseForge AI");
-
-            var requestBody = new
+            if (!response.IsSuccessStatusCode)
             {
-                model = model,
-                messages = new[]
-                {
-                    new { role = "system", content = systemPrompt },
-                    new { role = "user", content = userPrompt }
-                },
-                temperature = 0.8
-            };
-
-            var jsonContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
-            var response = await client.PostAsync($"{baseUrl}/chat/completions", jsonContent);
-            response.EnsureSuccessStatusCode();
+                var errorBody = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException(
+                    $"OpenRouter API error ({(int)response.StatusCode} {response.StatusCode}): {errorBody}"
+                );
+            }
 
             var responseBody = await response.Content.ReadAsStringAsync();
             using var doc = JsonDocument.Parse(responseBody);
-            var choice = doc.RootElement.GetProperty("choices")[0];
-            return choice.GetProperty("message").GetProperty("content").GetString() ?? string.Empty;
+            var root = doc.RootElement;
+
+            // Validate that we got choices
+            if (!root.TryGetProperty("choices", out var choices) ||
+                choices.GetArrayLength() == 0)
+            {
+                throw new InvalidOperationException("OpenRouter returned no choices in the response.");
+            }
+
+            var content = choices[0]
+                .GetProperty("message")
+                .GetProperty("content")
+                .GetString();
+
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                throw new InvalidOperationException("OpenRouter returned an empty response.");
+            }
+
+            return content;
         }
     }
 
-    // MockStrategy facilitates off-line demonstration/test runs out-of-the-box
+    /// <summary>
+    /// MockStrategy for offline/demo mode when no API key is configured.
+    /// </summary>
     public class MockStrategy : IOpenRouterStrategy
     {
         public string ModelName => "mock/local-sandbox";
@@ -95,11 +97,10 @@ namespace CaseForgeAI.Services
         {
             await Task.Delay(1500); // Simulate API latency
 
-            // Check if it's refinement or original generation
-            if (userPrompt.Contains("refine", StringComparison.OrdinalIgnoreCase) || userPrompt.Contains("Make", StringComparison.OrdinalIgnoreCase))
+            if (userPrompt.Contains("refine", StringComparison.OrdinalIgnoreCase) ||
+                userPrompt.Contains("Refinement", StringComparison.OrdinalIgnoreCase))
             {
-                // Return refined case
-                return GetMockRefinedCase(userPrompt);
+                return GetMockRefinedCase();
             }
 
             return GetMockCase();
@@ -123,7 +124,9 @@ namespace CaseForgeAI.Services
                 {
                     new { name = "Balcony Shattered Glass", description = "Shard of glass showing impact lines coming from the INSIDE of the room, suggesting a staged break-in.", locationName = "Study Balcony Door", clueType = "Physical", isHidden = false, connectionInfo = "Staged break-in by someone already inside.", hotspotX = 18, hotspotY = 70 },
                     new { name = "Golden Dye Stains", description = "Traces of a rare gold dye, the exact brand used to polish the safe's intricate brass details, found on a hand-drawn map.", locationName = "Greenhouse Path", clueType = "Physical", isHidden = true, connectionInfo = "Connects the thief directly to Julian's dye stains.", hotspotX = 72, hotspotY = 35 },
-                    new { name = "Club Guest Ledger Page", description = "A torn page from the Blackwood Club guests ledger showing Charles Sterling's signature was entered at 11:30 PM, but crossed out.", locationName = "Library Rubbish Bin", clueType = "Document", isHidden = false, connectionInfo = "Exposes Charles' fake alibi.", hotspotX = 45, hotspotY = 82 }
+                    new { name = "Club Guest Ledger Page", description = "A torn page from the Blackwood Club guests ledger showing Charles Sterling's signature was entered at 11:30 PM, but crossed out.", locationName = "Library Rubbish Bin", clueType = "Document", isHidden = false, connectionInfo = "Exposes Charles' fake alibi.", hotspotX = 45, hotspotY = 82 },
+                    new { name = "Muddy Boot Prints", description = "Fresh mud from the garden, size 10.", locationName = "Main Hallway", clueType = "Physical", isHidden = true, connectionInfo = "Proves someone from the garden entered the house.", hotspotX = 50, hotspotY = 90 },
+                    new { name = "Empty Brandy Glass", description = "A crystal glass smelling of expensive brandy.", locationName = "Fireplace Mantle", clueType = "Physical", isHidden = false, connectionInfo = "Someone was drinking before the murder.", hotspotX = 85, hotspotY = 20 }
                 },
                 puzzles = new[]
                 {
@@ -136,7 +139,7 @@ namespace CaseForgeAI.Services
             return JsonSerializer.Serialize(caseObj);
         }
 
-        private static string GetMockRefinedCase(string userPrompt)
+        private static string GetMockRefinedCase()
         {
             var caseObj = new
             {
@@ -152,7 +155,10 @@ namespace CaseForgeAI.Services
                 clues = new[]
                 {
                     new { name = "Vanilla Pipe Tobacco Ash", description = "A pinch of sweet-scented pipe ash scattered near the curator's body.", locationName = "Beside Victim", clueType = "Physical", isHidden = false, connectionInfo = "Ties Vincent Vance's habit to the crime scene.", hotspotX = 35, hotspotY = 75 },
-                    new { name = "Torn Auction Ticket", description = "A VIP ticket to Vincent's Chelsea auction, dated tonight, but stained with Crimson dye matching the curator's ink.", locationName = "Desk Drawer", clueType = "Document", isHidden = true, connectionInfo = "Ties Vincent's presence to the office earlier than the auction time.", hotspotX = 80, hotspotY = 40 }
+                    new { name = "Torn Auction Ticket", description = "A VIP ticket to Vincent's Chelsea auction, dated tonight, but stained with Crimson dye matching the curator's ink.", locationName = "Desk Drawer", clueType = "Document", isHidden = true, connectionInfo = "Ties Vincent's presence to the office earlier than the auction time.", hotspotX = 80, hotspotY = 40 },
+                    new { name = "Roman Coin", description = "A gold Roman coin dropped near the door.", locationName = "Hallway Floor", clueType = "Physical", isHidden = true, connectionInfo = "Suggests Clara might have been here, but it's a red herring.", hotspotX = 10, hotspotY = 90 },
+                    new { name = "Shattered Display Glass", description = "Glass from the display case containing the medallion.", locationName = "Display Case", clueType = "Physical", isHidden = false, connectionInfo = "Shows the exact point of theft.", hotspotX = 60, hotspotY = 50 },
+                    new { name = "Curator's Ledger", description = "The ledger showing recent sales.", locationName = "Bookshelf", clueType = "Document", isHidden = false, connectionInfo = "Lists buyers, but not the killer.", hotspotX = 90, hotspotY = 20 }
                 },
                 puzzles = new[]
                 {
@@ -163,5 +169,16 @@ namespace CaseForgeAI.Services
 
             return JsonSerializer.Serialize(caseObj);
         }
+    }
+
+    // Keep legacy classes as thin wrappers for backward compatibility
+    public class GemmaStrategy : OpenRouterStrategy
+    {
+        public GemmaStrategy() : base("google/gemma-2-9b-it:free") { }
+    }
+
+    public class LlamaStrategy : OpenRouterStrategy
+    {
+        public LlamaStrategy() : base("meta-llama/llama-3.1-8b-instruct:free") { }
     }
 }

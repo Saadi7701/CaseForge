@@ -1,0 +1,22 @@
+[33mcommit a00ae2fe2bbefda4fdc0f0959fce37f6276b752e[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/gameplay-module[m[33m)[m
+Author: Saadi7701 <mrsami1330@gmail.com>
+Date:   Tue Jun 2 23:39:13 2026 +0500
+
+    Implemented gameplay feature
+
+ Controllers/AdminController.cs                     |   9 [32m+[m[31m-[m
+ Controllers/GameplayController.cs                  |   1 [32m+[m
+ Controllers/HomeController.cs                      |  31 [32m+[m[31m-[m
+ Core/Entities/Clue.cs                              |   2 [32m+[m
+ .../20260602164924_AddIsCorrectToClues.Designer.cs | 819 [32m+++++++++++++++++++++[m
+ Migrations/20260602164924_AddIsCorrectToClues.cs   |  29 [32m+[m
+ Migrations/ApplicationDbContextModelSnapshot.cs    |   3 [32m+[m
+ Services/AIService.cs                              | 142 [32m++[m[31m--[m
+ Services/OpenRouterStrategies.cs                   | 127 [32m++[m[31m--[m
+ Views/Admin/Create.cshtml                          |  29 [32m+[m[31m-[m
+ Views/Admin/Review.cshtml                          | 150 [32m++++[m
+ Views/Dashboard/Index.cshtml                       | 170 [32m+++++[m
+ Views/Gameplay/Investigation.cshtml                | 643 [32m++++++++++++++++[m
+ Views/Home/History.cshtml                          |  63 [32m++[m
+ appsettings.json                                   |  10 [32m+[m[31m-[m
+ 15 files changed, 2093 insertions(+), 135 deletions(-)

@@ -1,12 +1,13 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
 namespace CaseForgeAI.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialPostgres : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,10 +16,10 @@ namespace CaseForgeAI.Migrations
                 name: "AspNetRoles",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    NormalizedName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    Name = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    NormalizedName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    ConcurrencyStamp = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -29,25 +30,25 @@ namespace CaseForgeAI.Migrations
                 name: "AspNetUsers",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    FullName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    TotalScore = table.Column<int>(type: "int", nullable: false),
-                    DetectiveRank = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    RegisteredAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    NormalizedEmail = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    EmailConfirmed = table.Column<bool>(type: "bit", nullable: false),
-                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    SecurityStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    PhoneNumberConfirmed = table.Column<bool>(type: "bit", nullable: false),
-                    TwoFactorEnabled = table.Column<bool>(type: "bit", nullable: false),
-                    LockoutEnd = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    LockoutEnabled = table.Column<bool>(type: "bit", nullable: false),
-                    AccessFailedCount = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    FullName = table.Column<string>(type: "text", nullable: false),
+                    TotalScore = table.Column<int>(type: "integer", nullable: false),
+                    DetectiveRank = table.Column<string>(type: "text", nullable: false),
+                    RegisteredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    NormalizedUserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    NormalizedEmail = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    EmailConfirmed = table.Column<bool>(type: "boolean", nullable: false),
+                    PasswordHash = table.Column<string>(type: "text", nullable: true),
+                    SecurityStamp = table.Column<string>(type: "text", nullable: true),
+                    ConcurrencyStamp = table.Column<string>(type: "text", nullable: true),
+                    PhoneNumber = table.Column<string>(type: "text", nullable: true),
+                    PhoneNumberConfirmed = table.Column<bool>(type: "boolean", nullable: false),
+                    TwoFactorEnabled = table.Column<bool>(type: "boolean", nullable: false),
+                    LockoutEnd = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    LockoutEnabled = table.Column<bool>(type: "boolean", nullable: false),
+                    AccessFailedCount = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -58,16 +59,16 @@ namespace CaseForgeAI.Migrations
                 name: "Stories",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    VictimName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    CrimeSceneDescription = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
-                    Difficulty = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    IsPublished = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    QualityScore = table.Column<double>(type: "float", nullable: false),
-                    Ending = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: false),
+                    VictimName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    CrimeSceneDescription = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    Difficulty = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    IsPublished = table.Column<bool>(type: "boolean", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    QualityScore = table.Column<double>(type: "double precision", nullable: false),
+                    Ending = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -78,11 +79,11 @@ namespace CaseForgeAI.Migrations
                 name: "AspNetRoleClaims",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    RoleId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    ClaimType = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ClaimValue = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    RoleId = table.Column<string>(type: "text", nullable: false),
+                    ClaimType = table.Column<string>(type: "text", nullable: true),
+                    ClaimValue = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -99,11 +100,11 @@ namespace CaseForgeAI.Migrations
                 name: "AspNetUserClaims",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    ClaimType = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ClaimValue = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<string>(type: "text", nullable: false),
+                    ClaimType = table.Column<string>(type: "text", nullable: true),
+                    ClaimValue = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -120,10 +121,10 @@ namespace CaseForgeAI.Migrations
                 name: "AspNetUserLogins",
                 columns: table => new
                 {
-                    LoginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    ProviderKey = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    ProviderDisplayName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    LoginProvider = table.Column<string>(type: "text", nullable: false),
+                    ProviderKey = table.Column<string>(type: "text", nullable: false),
+                    ProviderDisplayName = table.Column<string>(type: "text", nullable: true),
+                    UserId = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -140,8 +141,8 @@ namespace CaseForgeAI.Migrations
                 name: "AspNetUserRoles",
                 columns: table => new
                 {
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    RoleId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    UserId = table.Column<string>(type: "text", nullable: false),
+                    RoleId = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -164,10 +165,10 @@ namespace CaseForgeAI.Migrations
                 name: "AspNetUserTokens",
                 columns: table => new
                 {
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    LoginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Value = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    UserId = table.Column<string>(type: "text", nullable: false),
+                    LoginProvider = table.Column<string>(type: "text", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    Value = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -184,13 +185,13 @@ namespace CaseForgeAI.Migrations
                 name: "Analytics",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    StoryId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    TotalPlays = table.Column<int>(type: "int", nullable: false),
-                    SolvedCount = table.Column<int>(type: "int", nullable: false),
-                    AverageScore = table.Column<double>(type: "float", nullable: false),
-                    AverageSolveTimeSeconds = table.Column<double>(type: "float", nullable: false),
-                    LastUpdated = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    StoryId = table.Column<Guid>(type: "uuid", nullable: false),
+                    TotalPlays = table.Column<int>(type: "integer", nullable: false),
+                    SolvedCount = table.Column<int>(type: "integer", nullable: false),
+                    AverageScore = table.Column<double>(type: "double precision", nullable: false),
+                    AverageSolveTimeSeconds = table.Column<double>(type: "double precision", nullable: false),
+                    LastUpdated = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -207,16 +208,17 @@ namespace CaseForgeAI.Migrations
                 name: "Clues",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    StoryId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    LocationName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    ClueType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    IsHidden = table.Column<bool>(type: "bit", nullable: false),
-                    ConnectionInfo = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    HotspotX = table.Column<int>(type: "int", nullable: false),
-                    HotspotY = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    StoryId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: false),
+                    LocationName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    ClueType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    IsHidden = table.Column<bool>(type: "boolean", nullable: false),
+                    IsCorrect = table.Column<bool>(type: "boolean", nullable: false),
+                    ConnectionInfo = table.Column<string>(type: "text", nullable: false),
+                    HotspotX = table.Column<int>(type: "integer", nullable: false),
+                    HotspotY = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -233,15 +235,15 @@ namespace CaseForgeAI.Migrations
                 name: "PlayerProgress",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    UserId = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    StoryId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Score = table.Column<int>(type: "int", nullable: false),
-                    CurrentStage = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    IsCompleted = table.Column<bool>(type: "bit", nullable: false),
-                    CaseSolved = table.Column<bool>(type: "bit", nullable: false),
-                    StartedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    LastSavedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<string>(type: "text", nullable: false),
+                    StoryId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Score = table.Column<int>(type: "integer", nullable: false),
+                    CurrentStage = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    IsCompleted = table.Column<bool>(type: "boolean", nullable: false),
+                    CaseSolved = table.Column<bool>(type: "boolean", nullable: false),
+                    StartedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    LastSavedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -258,15 +260,15 @@ namespace CaseForgeAI.Migrations
                 name: "Puzzles",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    StoryId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Title = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
-                    Question = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CorrectAnswer = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Hint = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    PointsValue = table.Column<int>(type: "int", nullable: false),
-                    PuzzleType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    PuzzleDataJson = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    StoryId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Title = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
+                    Question = table.Column<string>(type: "text", nullable: false),
+                    CorrectAnswer = table.Column<string>(type: "text", nullable: false),
+                    Hint = table.Column<string>(type: "text", nullable: false),
+                    PointsValue = table.Column<int>(type: "integer", nullable: false),
+                    PuzzleType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    PuzzleDataJson = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -283,12 +285,12 @@ namespace CaseForgeAI.Migrations
                 name: "StoryRatings",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    StoryId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    UserId = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Rating = table.Column<int>(type: "int", nullable: false),
-                    Review = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    RatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    StoryId = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<string>(type: "text", nullable: false),
+                    Rating = table.Column<int>(type: "integer", nullable: false),
+                    Review = table.Column<string>(type: "text", nullable: false),
+                    RatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -305,13 +307,13 @@ namespace CaseForgeAI.Migrations
                 name: "StoryVersions",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    StoryId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    VersionNumber = table.Column<int>(type: "int", nullable: false),
-                    ContentJson = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    PromptUsed = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    StoryId = table.Column<Guid>(type: "uuid", nullable: false),
+                    VersionNumber = table.Column<int>(type: "integer", nullable: false),
+                    ContentJson = table.Column<string>(type: "text", nullable: false),
+                    PromptUsed = table.Column<string>(type: "text", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CreatedBy = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -328,15 +330,15 @@ namespace CaseForgeAI.Migrations
                 name: "Suspects",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    StoryId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Alibi = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Role = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Motive = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IsKiller = table.Column<bool>(type: "bit", nullable: false),
-                    AvatarUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    StoryId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Alibi = table.Column<string>(type: "text", nullable: false),
+                    Role = table.Column<string>(type: "text", nullable: false),
+                    Motive = table.Column<string>(type: "text", nullable: false),
+                    IsKiller = table.Column<bool>(type: "boolean", nullable: false),
+                    AvatarUrl = table.Column<string>(type: "text", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -353,12 +355,12 @@ namespace CaseForgeAI.Migrations
                 name: "EvidenceLinks",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    PlayerProgressId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ClueIdA = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ClueIdB = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    LinkNotes = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    PlayerProgressId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ClueIdA = table.Column<Guid>(type: "uuid", nullable: false),
+                    ClueIdB = table.Column<Guid>(type: "uuid", nullable: false),
+                    LinkNotes = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -385,10 +387,10 @@ namespace CaseForgeAI.Migrations
                 name: "InventoryItems",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    PlayerProgressId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ClueId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    CollectedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    PlayerProgressId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ClueId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CollectedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -420,8 +422,7 @@ namespace CaseForgeAI.Migrations
                 name: "RoleNameIndex",
                 table: "AspNetRoles",
                 column: "NormalizedName",
-                unique: true,
-                filter: "[NormalizedName] IS NOT NULL");
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetUserClaims_UserId",
@@ -447,8 +448,7 @@ namespace CaseForgeAI.Migrations
                 name: "UserNameIndex",
                 table: "AspNetUsers",
                 column: "NormalizedUserName",
-                unique: true,
-                filter: "[NormalizedUserName] IS NOT NULL");
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Clues_StoryId",

@@ -124,6 +124,7 @@ namespace CaseForgeAI.Controllers
             return Json(new { success });
         }
 
+
         [HttpGet]
         public async Task<IActionResult> Puzzles(Guid id)
         {
