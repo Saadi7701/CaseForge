@@ -58,9 +58,16 @@ namespace CaseForgeAI.Controllers
                 using var doc = JsonDocument.Parse(jsonResult);
                 var root = doc.RootElement;
                 string title = root.GetProperty("title").GetString() ?? "AI Generated Case";
+                if (title.Length > 200) title = title.Substring(0, 200);
+
                 string victim = root.GetProperty("victim").GetString() ?? "Unknown Victim";
+                if (victim.Length > 100) victim = victim.Substring(0, 100);
+
                 string difficulty = root.TryGetProperty("difficulty", out var diff) ? diff.GetString() ?? "Medium" : "Medium";
+                if (difficulty.Length > 50) difficulty = difficulty.Substring(0, 50);
+
                 string desc = root.TryGetProperty("crimeSceneDescription", out var d) ? d.GetString() ?? "" : "";
+                if (desc.Length > 500) desc = desc.Substring(0, 497) + "...";
 
                 var story = new CaseStory
                 {
@@ -148,9 +155,16 @@ namespace CaseForgeAI.Controllers
                 using var doc = JsonDocument.Parse(refinedJson);
                 var root = doc.RootElement;
                 story.Title = root.GetProperty("title").GetString() ?? story.Title;
+                if (story.Title.Length > 200) story.Title = story.Title.Substring(0, 200);
+
                 story.VictimName = root.GetProperty("victim").GetString() ?? story.VictimName;
+                if (story.VictimName.Length > 100) story.VictimName = story.VictimName.Substring(0, 100);
+
                 story.Difficulty = root.TryGetProperty("difficulty", out var diff) ? diff.GetString() ?? story.Difficulty : story.Difficulty;
+                if (story.Difficulty.Length > 50) story.Difficulty = story.Difficulty.Substring(0, 50);
+
                 story.CrimeSceneDescription = root.TryGetProperty("crimeSceneDescription", out var d) ? d.GetString() ?? story.CrimeSceneDescription : story.CrimeSceneDescription;
+                if (story.CrimeSceneDescription.Length > 500) story.CrimeSceneDescription = story.CrimeSceneDescription.Substring(0, 497) + "...";
                 story.QualityScore = _aiService.CalculateQualityScore(refinedJson);
 
                 await _context.SaveChangesAsync();
@@ -191,10 +205,18 @@ namespace CaseForgeAI.Controllers
                 var root = doc.RootElement;
 
                 story.Title = root.GetProperty("title").GetString() ?? story.Title;
+                if (story.Title.Length > 200) story.Title = story.Title.Substring(0, 200);
+
                 story.VictimName = root.GetProperty("victim").GetString() ?? story.VictimName;
+                if (story.VictimName.Length > 100) story.VictimName = story.VictimName.Substring(0, 100);
+
                 story.Description = $"Case of the murder of {story.VictimName}. Clues collected from crime scene investigation.";
+
                 story.CrimeSceneDescription = root.TryGetProperty("crimeSceneDescription", out var csd) ? csd.GetString() ?? "" : "";
+                if (story.CrimeSceneDescription.Length > 500) story.CrimeSceneDescription = story.CrimeSceneDescription.Substring(0, 497) + "...";
+
                 story.Difficulty = root.TryGetProperty("difficulty", out var diff) ? diff.GetString() ?? "Medium" : "Medium";
+                if (story.Difficulty.Length > 50) story.Difficulty = story.Difficulty.Substring(0, 50);
 
                 // Parse Suspects
                 if (root.TryGetProperty("suspects", out var suspectsArray))
@@ -221,13 +243,22 @@ namespace CaseForgeAI.Controllers
                 {
                     foreach (var c in cluesArray.EnumerateArray())
                     {
-                        var clue = new Clue
-                        {
-                            StoryId = story.Id,
-                            Name = c.GetProperty("name").GetString() ?? "Unnamed Clue",
-                            Description = c.GetProperty("description").GetString() ?? "",
-                            LocationName = c.GetProperty("locationName").GetString() ?? "Crime Scene",
-                            ClueType = c.GetProperty("clueType").GetString() ?? "Physical",
+                            var Name = c.GetProperty("name").GetString() ?? "Unnamed Clue";
+                            if (Name.Length > 150) Name = Name.Substring(0, 150);
+
+                            var location = c.GetProperty("locationName").GetString() ?? "Crime Scene";
+                            if (location.Length > 100) location = location.Substring(0, 100);
+
+                            var ctype = c.GetProperty("clueType").GetString() ?? "Physical";
+                            if (ctype.Length > 50) ctype = ctype.Substring(0, 50);
+
+                            var clue = new Clue
+                            {
+                                StoryId = story.Id,
+                                Name = Name,
+                                Description = c.GetProperty("description").GetString() ?? "",
+                                LocationName = location,
+                                ClueType = ctype,
                             IsHidden = c.TryGetProperty("isHidden", out var hid) && hid.GetBoolean(),
                             IsCorrect = c.TryGetProperty("isCorrect", out var corr) && corr.GetBoolean(),
                             ConnectionInfo = c.TryGetProperty("connectionInfo", out var conn) ? conn.GetString() ?? "" : "",
@@ -243,11 +274,17 @@ namespace CaseForgeAI.Controllers
                 {
                     foreach (var p in puzzlesArray.EnumerateArray())
                     {
+                        var pTitle = p.GetProperty("title").GetString() ?? "Cryptic Lock";
+                        if (pTitle.Length > 150) pTitle = pTitle.Substring(0, 150);
+
+                        var pType = p.GetProperty("puzzleType").GetString() ?? "Cipher";
+                        if (pType.Length > 50) pType = pType.Substring(0, 50);
+
                         var puzzle = new PuzzleEntity
                         {
                             StoryId = story.Id,
-                            Title = p.GetProperty("title").GetString() ?? "Cryptic Lock",
-                            PuzzleType = p.GetProperty("puzzleType").GetString() ?? "Cipher",
+                            Title = pTitle,
+                            PuzzleType = pType,
                             Question = p.GetProperty("question").GetString() ?? "Solve the puzzle.",
                             CorrectAnswer = p.GetProperty("correctAnswer").GetString() ?? "",
                             Hint = p.GetProperty("hint").GetString() ?? "",

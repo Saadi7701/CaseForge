@@ -31,9 +31,19 @@ namespace CaseForgeAI.Services
 
             if (existing != null)
             {
-                existing.LastSavedAt = DateTime.UtcNow;
-                await _context.SaveChangesAsync();
-                return existing;
+                if (existing.IsCompleted)
+                {
+                    _context.InventoryItems.RemoveRange(existing.Inventory);
+                    _context.EvidenceLinks.RemoveRange(existing.EvidenceLinks);
+                    _context.PlayerProgresses.Remove(existing);
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+                    existing.LastSavedAt = DateTime.UtcNow;
+                    await _context.SaveChangesAsync();
+                    return existing;
+                }
             }
 
             var progress = new PlayerProgress
@@ -184,6 +194,16 @@ namespace CaseForgeAI.Services
             var suspect = await _context.Suspects.FindAsync(suspectId);
             if (suspect == null || suspect.StoryId != progress.StoryId) 
                 return new AccusationResult { Success = false, Message = "Suspect not found." };
+
+            if (progress.IsCompleted)
+            {
+                return new AccusationResult 
+                { 
+                    Success = progress.CaseSolved, 
+                    Message = progress.CaseSolved ? "Already Solved" : "Already Failed", 
+                    Details = "You have already made your final accusation for this playthrough. Click Play Again to restart." 
+                };
+            }
 
             progress.LastSavedAt = DateTime.UtcNow;
             progress.IsCompleted = true;
