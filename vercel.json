@@ -2,10 +2,9 @@
   "version": 2,
   "builds": [
     {
-      "src": "CaseForgeAI.sln",
+      "src": "build.sh",
       "use": "@vercel/static-build",
       "config": {
-        "command": "dotnet publish -c Release -o .vercel_build_output",
         "outputDirectory": ".vercel_build_output"
       }
     }
