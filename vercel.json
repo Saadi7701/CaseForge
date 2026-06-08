@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "CaseForgeAI.sln",
+      "use": "@vercel/static-build",
+      "config": {
+        "command": "dotnet publish -c Release -o .vercel_build_output",
+        "outputDirectory": ".vercel_build_output"
+      }
+    }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "/$1" }
+  ]
+}
