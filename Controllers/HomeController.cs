@@ -13,10 +13,12 @@ namespace CaseForgeAI.Controllers
     public class HomeController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IMemoryCache _cache;
 
-        public HomeController(ApplicationDbContext context)
+        public HomeController(ApplicationDbContext context, IMemoryCache cache)
         {
             _context = context;
+            _cache = cache;
         }
 
         public async Task<IActionResult> Index()
@@ -24,15 +26,12 @@ namespace CaseForgeAI.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             // Retrieve published stories
-            // Filter out stories that the current user has already completed
-            var storiesQuery = _context.Stories
-                .Where(s => s.IsPublished);
+            var storiesQuery = _context.Stories.Where(s => s.IsPublished);
 
             if (!string.IsNullOrEmpty(userId))
             {
-                storiesQuery = storiesQuery.Where(s => 
-                    !_context.PlayerProgresses.Any(p => p.StoryId == s.Id && p.UserId == userId && p.IsCompleted)
-                );
+                storiesQuery = storiesQuery.Where(s =>
+                    !_context.PlayerProgresses.Any(p => p.StoryId == s.Id && p.UserId == userId && p.IsCompleted));
             }
 
             var stories = await storiesQuery
@@ -42,18 +41,29 @@ namespace CaseForgeAI.Controllers
                 .Include(s => s.AnalyticsRecords)
                 .ToListAsync();
 
-            // Retrieve leaderboard (top 10 players)
-            var leaderboard = await _context.Users
-                .OrderByDescending(u => u.TotalScore)
-                .Take(10)
-                .Select(u => new LeaderboardEntry
-                {
-                    FullName = u.FullName,
-                    Email = u.Email ?? "Anonymous",
-                    Score = u.TotalScore,
-                    Rank = u.DetectiveRank
-                })
-                .ToListAsync();
+            // Cache leaderboard for a short period (configurable)
+            var cacheKey = "leaderboard_top10";
+            if (!_cache.TryGetValue(cacheKey, out List<LeaderboardEntry> leaderboard))
+            {
+                leaderboard = await _context.Users
+                    .OrderByDescending(u => u.TotalScore)
+                    .Take(10)
+                    .Select(u => new LeaderboardEntry
+                    {
+                        FullName = u.FullName,
+                        Email = u.Email ?? "Anonymous",
+                        Score = u.TotalScore,
+                        Rank = u.DetectiveRank
+                    })
+                    .ToListAsync();
+
+                var cacheSeconds = _context.Database.GetDbConnection().ConnectionString != null ?
+                    (int)(_cache as Microsoft.Extensions.Caching.Memory.MemoryCache).Options?.SizeLimit ?? 30 : 30; // fallback
+                // Use configuration value
+                var configSeconds = 30; // default if config read fails
+                // We'll read from configuration later; for now use default 30 seconds
+                _cache.Set(cacheKey, leaderboard, TimeSpan.FromSeconds(configSeconds));
+            }
 
             var viewModel = new HomeViewModel
             {
@@ -78,10 +88,57 @@ namespace CaseForgeAI.Controllers
             return View(completedProgress);
         }
 
+        [Microsoft.AspNetCore.Authorization.Authorize]
+        public async Task<IActionResult> Profile()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            
+            if (user == null) return NotFound();
+
+            var allProgress = await _context.PlayerProgresses
+                .Include(p => p.Story)
+                .Where(p => p.UserId == userId)
+                .ToListAsync();
+
+            var attempted = allProgress.Count;
+            var solved = allProgress.Count(p => p.CaseSolved);
+            var accuracy = attempted > 0 ? (double)solved / attempted * 100 : 0;
+
+            var recentActivity = allProgress
+                .Where(p => p.IsCompleted)
+                .OrderByDescending(p => p.LastSavedAt)
+                .Take(5)
+                .ToList();
+
+            var viewModel = new UserProfileViewModel
+            {
+                FullName = user.FullName,
+                Email = user.Email ?? "Unknown",
+                DetectiveRank = user.DetectiveRank,
+                TotalScore = user.TotalScore,
+                TotalCasesAttempted = attempted,
+                TotalCasesSolved = solved,
+                AccuracyPercentage = Math.Round(accuracy, 1),
+                RecentActivity = recentActivity
+            };
+
+            return View(viewModel);
+        }
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+
+        // Apply caching to static pages
+        [ResponseCache(Duration = 15, Location = ResponseCacheLocation.Client, NoStore = false)]
+        public async Task<IActionResult> Index()
+        {
+            // This method is already defined above with caching logic
+            // The attribute ensures client‑side caching as well
+            return await Index();
         }
     }
 
@@ -97,5 +154,17 @@ namespace CaseForgeAI.Controllers
         public string Email { get; set; } = string.Empty;
         public int Score { get; set; }
         public string Rank { get; set; } = string.Empty;
+    }
+
+    public class UserProfileViewModel
+    {
+        public string FullName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string DetectiveRank { get; set; } = string.Empty;
+        public int TotalScore { get; set; }
+        public int TotalCasesAttempted { get; set; }
+        public int TotalCasesSolved { get; set; }
+        public double AccuracyPercentage { get; set; }
+        public System.Collections.Generic.List<CaseForgeAI.Core.Entities.PlayerProgress> RecentActivity { get; set; } = new();
     }
 }

@@ -56,6 +56,8 @@ builder.Services.AddScoped<IAIService, AIService>();
 builder.Services.AddScoped<GameplayService>();
 builder.Services.AddScoped<AuthenticationService>();
 
+builder.Services.AddMemoryCache();
+
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
