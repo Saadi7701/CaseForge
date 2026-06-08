@@ -32,6 +32,8 @@ namespace CaseForgeAI.Core.Entities
 
         public bool IsHidden { get; set; } = false;
 
+        public bool IsCorrect { get; set; } = false;
+
         public string ConnectionInfo { get; set; } = string.Empty;
 
         // Hotspot coordinates for visual investigation scene (normalized 0-100 values)

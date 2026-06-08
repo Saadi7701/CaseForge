@@ -1,0 +1,170 @@
+@model IEnumerable<CaseForgeAI.Controllers.ActivityEntry>
+@{
+    ViewData["Title"] = "Analytics Dashboard";
+}
+
+<div class="mb-8">
+    <h1 class="text-3xl font-serif font-bold text-noir-gold mb-2 uppercase tracking-widest">System Intelligence</h1>
+    <p class="text-noir-brass text-sm tracking-wider">Monitor case engagement, player performance, and real-time operations.</p>
+</div>
+
+<!-- Stat Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+    <div class="bg-noir-charcoal/80 backdrop-blur-md border border-noir-gold/20 p-6 rounded-lg shadow-lg hover:shadow-[0_0_20px_rgba(212,175,55,0.15)] transition duration-300">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-noir-brass text-xs font-serif uppercase tracking-widest">Total Cases</h3>
+            <i class="fa-solid fa-folder-open text-noir-gold/70 text-xl"></i>
+        </div>
+        <p class="text-4xl font-sans font-light text-white">@ViewBag.TotalCases</p>
+    </div>
+
+    <div class="bg-noir-charcoal/80 backdrop-blur-md border border-noir-gold/20 p-6 rounded-lg shadow-lg hover:shadow-[0_0_20px_rgba(212,175,55,0.15)] transition duration-300">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-noir-brass text-xs font-serif uppercase tracking-widest">Published</h3>
+            <i class="fa-solid fa-globe text-noir-gold/70 text-xl"></i>
+        </div>
+        <p class="text-4xl font-sans font-light text-white">@ViewBag.PublishedCases</p>
+    </div>
+
+    <div class="bg-noir-charcoal/80 backdrop-blur-md border border-noir-gold/20 p-6 rounded-lg shadow-lg hover:shadow-[0_0_20px_rgba(212,175,55,0.15)] transition duration-300">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-noir-brass text-xs font-serif uppercase tracking-widest">Total Plays</h3>
+            <i class="fa-solid fa-play text-noir-gold/70 text-xl"></i>
+        </div>
+        <p class="text-4xl font-sans font-light text-white">@ViewBag.TotalPlays</p>
+    </div>
+
+    <div class="bg-noir-charcoal/80 backdrop-blur-md border border-noir-gold/20 p-6 rounded-lg shadow-lg hover:shadow-[0_0_20px_rgba(212,175,55,0.15)] transition duration-300">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-noir-brass text-xs font-serif uppercase tracking-widest">Solved</h3>
+            <i class="fa-solid fa-check-double text-noir-gold/70 text-xl"></i>
+        </div>
+        <p class="text-4xl font-sans font-light text-white">@ViewBag.SolvedPlays</p>
+    </div>
+</div>
+
+<!-- Chart & Activity Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    
+    <!-- Analytics Chart -->
+    <div class="lg:col-span-2 bg-noir-charcoal/80 backdrop-blur-md border border-noir-gold/20 rounded-lg shadow-lg p-6">
+        <h2 class="text-lg font-serif text-noir-gold mb-6 uppercase tracking-widest border-b border-noir-gold/20 pb-2">Case Performance Metrics</h2>
+        <div class="relative h-80 w-full">
+            <canvas id="analyticsChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="bg-noir-charcoal/80 backdrop-blur-md border border-noir-gold/20 rounded-lg shadow-lg p-6 flex flex-col h-full">
+        <h2 class="text-lg font-serif text-noir-gold mb-6 uppercase tracking-widest border-b border-noir-gold/20 pb-2">Recent Operations</h2>
+        
+        <div class="flex-grow overflow-y-auto pr-2 custom-scrollbar space-y-4 max-h-80">
+            @if (Model != null && Model.Any())
+            {
+                foreach (var act in Model)
+                {
+                    <div class="p-3 border border-noir-gold/10 rounded bg-noir-obsidian/50 hover:bg-noir-obsidian transition">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="text-sm font-semibold text-white">@act.CaseTitle</h4>
+                            <span class="text-[10px] text-noir-brass">@act.Time</span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="text-noir-brass">Stage: <span class="text-white">@act.Stage</span></span>
+                            
+                            @if(act.Solved) {
+                                <span class="px-2 py-0.5 rounded text-[10px] bg-green-900/30 text-green-400 border border-green-800/50 uppercase tracking-wider">Solved</span>
+                            } else if (act.Completed) {
+                                <span class="px-2 py-0.5 rounded text-[10px] bg-red-900/30 text-red-400 border border-red-800/50 uppercase tracking-wider">Failed</span>
+                            } else {
+                                <span class="px-2 py-0.5 rounded text-[10px] bg-blue-900/30 text-blue-400 border border-blue-800/50 uppercase tracking-wider">Active</span>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-center py-8 text-noir-brass/50 text-sm italic">
+                    No recent operations detected.
+                </div>
+            }
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            fetch('/Dashboard/GetAnalyticsJson')
+                .then(response => response.json())
+                .then(data => {
+                    const ctx = document.getElementById('analyticsChart').getContext('2d');
+                    
+                    const labels = data.map(d => d.title);
+                    const playsData = data.map(d => d.plays);
+                    const solvedData = data.map(d => d.solved);
+
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: 'Total Plays',
+                                    data: playsData,
+                                    backgroundColor: 'rgba(212, 175, 55, 0.6)',
+                                    borderColor: 'rgba(212, 175, 55, 1)',
+                                    borderWidth: 1,
+                                    borderRadius: 4
+                                },
+                                {
+                                    label: 'Solved',
+                                    data: solvedData,
+                                    backgroundColor: 'rgba(28, 53, 40, 0.8)',
+                                    borderColor: 'rgba(28, 53, 40, 1)',
+                                    borderWidth: 1,
+                                    borderRadius: 4
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: {
+                                        color: 'rgba(212, 175, 55, 0.1)'
+                                    },
+                                    ticks: {
+                                        color: '#C5A880'
+                                    }
+                                },
+                                x: {
+                                    grid: {
+                                        display: false
+                                    },
+                                    ticks: {
+                                        color: '#C5A880'
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    labels: {
+                                        color: '#F5EFEB',
+                                        font: {
+                                            family: "'Inter', sans-serif"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                })
+                .catch(error => console.error("Error loading analytics data:", error));
+        });
+    </script>
+}

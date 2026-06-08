@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using CaseForgeAI.Core.OOP.Characters;
 
@@ -8,6 +9,7 @@ namespace CaseForgeAI.Core.Entities
     [Table("Suspects")]
     public class Suspect : Character
     {
+        [Key]
         public Guid Id { get; set; } = Guid.NewGuid();
         
         public Guid StoryId { get; set; }

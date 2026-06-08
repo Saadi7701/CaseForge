@@ -1,0 +1,150 @@
+@model CaseForgeAI.Core.Entities.CaseStory
+@{
+    ViewData["Title"] = "Review Case";
+    var latestVersion = ViewBag.LatestVersion as CaseForgeAI.Core.Entities.StoryVersion;
+}
+
+<div class="space-y-10">
+    <div class="text-center py-8 space-y-4">
+        <h1 class="font-serif text-4xl md:text-5xl font-bold tracking-widest text-noir-gold text-glow-gold">
+            REVIEW CASE: @Model.Title
+        </h1>
+        <p class="text-noir-brass text-sm tracking-widest uppercase font-serif">
+            Examine the AI generated evidence before publishing
+        </p>
+        <div class="w-24 h-[1px] bg-gradient-to-r from-transparent via-noir-gold to-transparent mx-auto"></div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div id="alertSuccess" class="glass-panel rounded-lg px-6 py-4 border border-green-500/30 flex items-center space-x-3 animate-fade-in">
+            <i class="fa-solid fa-circle-check text-green-400 text-xl"></i>
+            <span class="text-green-300 text-sm font-sans">@TempData["SuccessMessage"]</span>
+            <button onclick="document.getElementById('alertSuccess').remove()" class="ml-auto text-green-400/60 hover:text-white transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div id="alertError" class="glass-panel rounded-lg px-6 py-4 border border-red-500/30 flex items-center space-x-3 animate-fade-in">
+            <i class="fa-solid fa-triangle-exclamation text-red-400 text-xl"></i>
+            <span class="text-red-300 text-sm font-sans">@TempData["ErrorMessage"]</span>
+            <button onclick="document.getElementById('alertError').remove()" class="ml-auto text-red-400/60 hover:text-white transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+    }
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Details Panel -->
+        <div class="leather-card rounded-lg p-6 border-l-4 border-l-noir-brass/40 space-y-6">
+            <h3 class="font-serif text-xl font-bold text-white border-b border-white/10 pb-2">
+                <i class="fa-solid fa-file-contract mr-2 text-noir-gold"></i>Case Details
+            </h3>
+            
+            <div class="space-y-4 text-sm font-sans">
+                <div>
+                    <strong class="text-noir-gold uppercase tracking-wider text-xs">Title:</strong>
+                    <p class="text-white">@Model.Title</p>
+                </div>
+                <div>
+                    <strong class="text-noir-gold uppercase tracking-wider text-xs">Victim:</strong>
+                    <p class="text-white">@Model.VictimName</p>
+                </div>
+                <div>
+                    <strong class="text-noir-gold uppercase tracking-wider text-xs">Difficulty:</strong>
+                    <p class="text-white">@Model.Difficulty</p>
+                </div>
+                <div>
+                    <strong class="text-noir-gold uppercase tracking-wider text-xs">Crime Scene:</strong>
+                    <p class="text-white">@Model.CrimeSceneDescription</p>
+                </div>
+                <div>
+                    <strong class="text-noir-gold uppercase tracking-wider text-xs">Quality Score:</strong>
+                    <p class="text-white">@Model.QualityScore.ToString("F1")</p>
+                </div>
+                <div>
+                    <strong class="text-noir-gold uppercase tracking-wider text-xs">Status:</strong>
+                    <p class="text-white">@(Model.IsPublished ? "Published" : "Draft")</p>
+                </div>
+            </div>
+
+            @if (!Model.IsPublished && latestVersion != null)
+            {
+                <form asp-action="PublishCase" method="post" class="mt-6">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <input type="hidden" name="versionId" value="@latestVersion.Id" />
+                    <button type="submit" class="w-full px-6 py-3 bg-gradient-to-r from-green-600 to-green-500 text-white font-serif text-sm font-bold uppercase tracking-widest rounded hover:shadow-[0_0_20px_rgba(34,197,94,0.4)] transition duration-300">
+                        <i class="fa-solid fa-globe mr-2"></i>Publish This Version
+                    </button>
+                </form>
+            }
+        </div>
+
+        <!-- Refinement Panel -->
+        <div class="leather-card rounded-lg p-6 border-l-4 border-l-noir-gold/40 space-y-6">
+            <h3 class="font-serif text-xl font-bold text-white border-b border-white/10 pb-2">
+                <i class="fa-solid fa-pen-nib mr-2 text-noir-gold"></i>Refine Case
+            </h3>
+            
+            <p class="text-noir-brass text-sm mb-4">
+                Not satisfied with the current draft? Provide feedback to the AI to refine the details, change suspects, or adjust the difficulty.
+            </p>
+
+            <form asp-action="RefineCase" method="post" class="space-y-4">
+                <input type="hidden" name="id" value="@Model.Id" />
+                
+                <div class="space-y-2">
+                    <label for="feedbackPrompt" class="block text-noir-gold text-xs uppercase tracking-widest font-serif font-bold">Feedback Prompt</label>
+                    <textarea id="feedbackPrompt" name="feedbackPrompt" rows="4" required class="w-full bg-black/40 border border-white/10 rounded px-4 py-2 text-white font-sans focus:border-noir-gold focus:ring-1 focus:ring-noir-gold transition placeholder-white/30" placeholder="e.g. Make the motive more complex, or change the murder weapon..."></textarea>
+                </div>
+
+                <div class="bg-noir-obsidian/40 border border-noir-gold/15 rounded px-3 py-2 flex items-center gap-3">
+                    <i class="fa-solid fa-microchip text-noir-gold"></i>
+                    <div>
+                        <p class="text-noir-brass text-[10px] uppercase tracking-widest">AI Engine</p>
+                        <p class="text-noir-ivory text-xs">OpenRouter &mdash; Auto Fallback</p>
+                    </div>
+                    <i class="fa-solid fa-circle-check text-green-500/70 ml-auto text-xs"></i>
+                </div>
+
+                <button type="submit" class="w-full px-6 py-3 bg-gradient-to-r from-noir-bronze to-noir-gold text-noir-obsidian font-serif text-sm font-bold uppercase tracking-widest rounded hover:shadow-[0_0_20px_rgba(212,175,55,0.5)] transition duration-300">
+                    <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Refine Case
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- JSON Preview Panel -->
+    @if (latestVersion != null)
+    {
+        <div class="leather-card rounded-lg p-6 border-l-4 border-l-noir-brass/40 space-y-4">
+            <h3 class="font-serif text-xl font-bold text-white border-b border-white/10 pb-2">
+                <i class="fa-solid fa-code mr-2 text-noir-gold"></i>Version @latestVersion.VersionNumber Data Preview
+            </h3>
+            <div class="bg-black/60 rounded-lg p-4 overflow-x-auto border border-white/5">
+                <pre class="text-emerald-400 text-xs font-mono"><code>@latestVersion.ContentJson</code></pre>
+            </div>
+        </div>
+    }
+
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            ['alertSuccess', 'alertError'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    setTimeout(() => {
+                        el.style.opacity = '0';
+                        el.style.transform = 'translateY(-10px)';
+                        setTimeout(() => el.remove(), 400);
+                    }, 6000);
+                }
+            });
+        });
+    </script>
+}

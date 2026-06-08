@@ -58,29 +58,14 @@
                     ></textarea>
                 </div>
 
-                {{-- Model Selector --}}
-                <div class="mb-8">
-                    <label for="model" class="block font-sans text-xs text-noir-brass uppercase tracking-widest mb-2">
-                        AI Model
-                    </label>
-                    <div class="relative">
-                        <select
-                            id="model"
-                            name="model"
-                            class="w-full appearance-none bg-noir-obsidian/60 border border-noir-gold/20 rounded-lg
-                                   px-4 py-3 pr-10
-                                   font-sans text-noir-ivory text-sm
-                                   focus:outline-none focus:border-noir-gold/60 focus:ring-1 focus:ring-noir-gold/30
-                                   transition-all duration-300 cursor-pointer">
-                            <option value="google/gemma-2-9b-it:free" selected>google/gemma-2-9b-it:free</option>
-                            <option value="meta-llama/llama-3-8b-instruct:free">meta-llama/llama-3-8b-instruct:free</option>
-                            <option value="mistralai/mistral-7b-instruct:free">mistralai/mistral-7b-instruct:free</option>
-                            <option value="deepseek/deepseek-chat:free">deepseek/deepseek-chat:free</option>
-                        </select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                            <i class="fa-solid fa-chevron-down text-noir-gold/50 text-xs"></i>
-                        </div>
+                {{-- AI Engine Info --}}
+                <div class="mb-8 bg-noir-obsidian/40 border border-noir-gold/15 rounded-lg px-4 py-3 flex items-center gap-3">
+                    <i class="fa-solid fa-microchip text-noir-gold text-lg"></i>
+                    <div>
+                        <p class="font-sans text-xs text-noir-brass uppercase tracking-widest">AI Engine</p>
+                        <p class="font-sans text-sm text-noir-ivory">OpenRouter &mdash; Auto-selected with smart fallback</p>
                     </div>
+                    <i class="fa-solid fa-circle-check text-green-500/70 ml-auto text-sm"></i>
                 </div>
 
                 {{-- Submit Button --}}

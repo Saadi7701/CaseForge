@@ -1,0 +1,63 @@
+@model IEnumerable<CaseForgeAI.Core.Entities.PlayerProgress>
+
+@{
+    ViewData["Title"] = "My Case History";
+}
+
+<div class="space-y-8">
+    <header class="text-center space-y-4 pt-4">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-noir-gold/20 bg-noir-charcoal/60 backdrop-blur text-xs font-sans uppercase tracking-[0.25em] text-noir-brass">
+            <i class="fa-solid fa-clock text-noir-gold"></i>
+            Detective Records
+        </div>
+        <h1 class="font-serif text-4xl tracking-wide text-noir-ivory">
+            Case <span class="text-noir-gold">History</span>
+        </h1>
+        <div class="mx-auto w-64 h-px bg-gradient-to-r from-transparent via-noir-gold/50 to-transparent"></div>
+    </header>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-16 bg-noir-charcoal/40 rounded-xl border border-noir-gold/10">
+            <i class="fa-solid fa-folder-open text-5xl text-noir-gold/20 mb-4"></i>
+            <p class="text-noir-brass text-lg">No completed cases yet.</p>
+            <a asp-controller="Home" asp-action="Index" class="mt-4 inline-block px-6 py-2 border border-noir-gold text-noir-gold hover:bg-noir-gold hover:text-black transition-colors rounded">Browse Cases</a>
+        </div>
+    }
+    else
+    {
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            @foreach (var progress in Model)
+            {
+                var isWin = progress.CaseSolved;
+                var statusColor = isWin ? "text-green-400 border-green-500/30" : "text-red-400 border-red-500/30";
+                var statusBg = isWin ? "bg-green-500/10" : "bg-red-500/10";
+                var icon = isWin ? "fa-check-circle" : "fa-times-circle";
+
+                <div class="rounded-xl border border-noir-gold/20 bg-noir-charcoal/80 p-6 flex flex-col gap-4 relative overflow-hidden transition hover:border-noir-gold/50">
+                    <div class="absolute top-0 right-0 p-4">
+                        <div class="px-3 py-1 rounded-full text-xs font-bold @statusBg @statusColor border flex items-center gap-2">
+                            <i class="fa-solid @icon"></i> @(isWin ? "Solved" : "Failed")
+                        </div>
+                    </div>
+
+                    <div>
+                        <h2 class="text-2xl font-serif text-noir-ivory pr-24">@progress.Story?.Title</h2>
+                        <p class="text-sm text-noir-brass/80 mt-1">Victim: @progress.Story?.VictimName</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mt-auto pt-4 border-t border-noir-gold/10">
+                        <div>
+                            <span class="block text-xs uppercase text-noir-brass/60">Final Score</span>
+                            <span class="text-lg font-bold text-white">@progress.Score</span>
+                        </div>
+                        <div>
+                            <span class="block text-xs uppercase text-noir-brass/60">Completed On</span>
+                            <span class="text-sm text-white">@progress.LastSavedAt.ToLocalTime().ToString("MMM dd, yyyy")</span>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

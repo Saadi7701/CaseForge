@@ -31,9 +31,19 @@ namespace CaseForgeAI.Services
 
             if (existing != null)
             {
-                existing.LastSavedAt = DateTime.UtcNow;
-                await _context.SaveChangesAsync();
-                return existing;
+                if (existing.IsCompleted)
+                {
+                    _context.InventoryItems.RemoveRange(existing.Inventory);
+                    _context.EvidenceLinks.RemoveRange(existing.EvidenceLinks);
+                    _context.PlayerProgresses.Remove(existing);
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+                    existing.LastSavedAt = DateTime.UtcNow;
+                    await _context.SaveChangesAsync();
+                    return existing;
+                }
             }
 
             var progress = new PlayerProgress
@@ -187,7 +197,12 @@ namespace CaseForgeAI.Services
 
             if (progress.IsCompleted)
             {
-                return new AccusationResult { Success = false, Message = "Case already concluded." };
+                return new AccusationResult 
+                { 
+                    Success = progress.CaseSolved, 
+                    Message = progress.CaseSolved ? "Already Solved" : "Already Failed", 
+                    Details = "You have already made your final accusation for this playthrough. Click Play Again to restart." 
+                };
             }
 
             progress.LastSavedAt = DateTime.UtcNow;
@@ -235,16 +250,13 @@ namespace CaseForgeAI.Services
                 progress.CurrentStage = "Finished";
                 progress.Score = 0; // Failed cases get 0 score
 
-                var trueKiller = progress.Story?.Suspects?.FirstOrDefault(s => s.IsKiller);
-                string trueKillerName = trueKiller?.Name ?? "Unknown";
-
                 await _context.SaveChangesAsync();
 
                 return new AccusationResult
                 {
                     Success = false,
                     Message = "Wrong Accusation!",
-                    Details = $"You accused {suspect.Name}, but they were innocent. The true killer was {trueKillerName}. Here is what really happened: {progress.Story?.Ending}"
+                    Details = $"You accused {suspect.Name}, but they had a solid alibi. The true killer escaped, leaving the department in disgrace."
                 };
             }
         }

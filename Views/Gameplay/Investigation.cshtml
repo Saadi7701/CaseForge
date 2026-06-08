@@ -1,0 +1,643 @@
+@model CaseForgeAI.Core.Entities.PlayerProgress
+
+@{
+    ViewData["Title"] = "Investigation - " + Model.Story!.Title;
+    var clues = Model.Story.Clues;
+    var collectedClueIds = Model.Inventory.Select(i => i.ClueId).ToHashSet();
+}
+
+<!-- ─────────────────── INLINE STYLES ─────────────────── -->
+<style>
+    /* Atmospheric rain streaks on the window */
+    .rain-overlay {
+        position: fixed;
+        inset: 0;
+        background: repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 3px,
+            rgba(212,175,55,0.01) 3px,
+            rgba(212,175,55,0.01) 4px
+        );
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    /* Crime scene tape shimmer */
+    @@keyframes tapeShimmer {
+        0%   { background-position: -300% 0; }
+        100% { background-position: 300% 0; }
+    }
+
+    .crime-tape {
+        background: repeating-linear-gradient(
+            -45deg,
+            #D4AF37 0px,
+            #D4AF37 10px,
+            #090A0B 10px,
+            #090A0B 20px
+        );
+        background-size: 200% 100%;
+        animation: tapeShimmer 8s linear infinite;
+    }
+
+    /* Gold shimmer for header divider */
+    @@keyframes shimmer {
+        0%   { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+
+    .shimmer-line {
+        background: linear-gradient(90deg, transparent 0%, #D4AF37 50%, transparent 100%);
+        background-size: 200% 100%;
+        animation: shimmer 4s linear infinite;
+    }
+
+    /* Hotspot pulse animation */
+    @@keyframes hotspotPulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(212,175,55,0.4); }
+        50%      { box-shadow: 0 0 0 12px rgba(212,175,55,0); }
+    }
+
+    .hotspot-marker {
+        animation: hotspotPulse 2.5s ease-in-out infinite;
+        transition: transform 0.3s cubic-bezier(.25,.8,.25,1), box-shadow 0.3s ease;
+    }
+    .hotspot-marker:hover {
+        transform: scale(1.3);
+        box-shadow: 0 0 25px rgba(212,175,55,0.5);
+    }
+
+    /* Collected hotspot state */
+    .hotspot-collected {
+        animation: none;
+        opacity: 0.4;
+        pointer-events: none;
+    }
+
+    /* Clue reveal card slide-up */
+    .clue-reveal {
+        transform: translateY(40px);
+        opacity: 0;
+        transition: transform 0.6s cubic-bezier(.22,1,.36,1), opacity 0.6s ease;
+    }
+    .clue-reveal.active {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    /* Evidence magnifying glass cursor on scene */
+    .crime-scene-area {
+        cursor: crosshair;
+    }
+
+    /* Inventory item entrance */
+    .inv-item {
+        transition: transform 0.35s cubic-bezier(.25,.8,.25,1), box-shadow 0.35s ease;
+    }
+    .inv-item:hover {
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 8px 30px rgba(212,175,55,0.12);
+    }
+
+    /* Dust motes floating */
+    @@keyframes dustFloat {
+        0%   { transform: translateY(0) translateX(0); opacity: 0; }
+        10%  { opacity: 0.6; }
+        90%  { opacity: 0.6; }
+        100% { transform: translateY(-100vh) translateX(40px); opacity: 0; }
+    }
+
+    .dust-mote {
+        position: fixed;
+        width: 3px;
+        height: 3px;
+        background: rgba(212,175,55,0.3);
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 0;
+    }
+</style>
+
+<!-- ─────────────────── ATMOSPHERIC OVERLAYS ─────────────────── -->
+<div class="rain-overlay"></div>
+
+<!-- Floating dust motes -->
+<div class="dust-mote" style="left:15%; bottom:-10px; animation: dustFloat 12s linear infinite;"></div>
+<div class="dust-mote" style="left:35%; bottom:-10px; animation: dustFloat 18s linear 3s infinite;"></div>
+<div class="dust-mote" style="left:55%; bottom:-10px; animation: dustFloat 15s linear 6s infinite;"></div>
+<div class="dust-mote" style="left:75%; bottom:-10px; animation: dustFloat 20s linear 2s infinite;"></div>
+<div class="dust-mote" style="left:90%; bottom:-10px; animation: dustFloat 14s linear 8s infinite;"></div>
+
+<!-- ─────────────────── MAIN CONTENT ─────────────────── -->
+<div class="relative z-10 space-y-10">
+
+    <!-- ══════════ HEADER ══════════ -->
+    <header class="text-center space-y-4 pt-4" id="pageHeader">
+        <!-- Case badge -->
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-noir-gold/20 bg-noir-charcoal/60 backdrop-blur text-xs font-sans uppercase tracking-[0.25em] text-noir-brass">
+            <i class="fa-solid fa-folder-open text-noir-gold"></i>
+            @Model.Story.Title
+        </div>
+
+        <!-- Main title -->
+        <h1 class="font-serif text-4xl md:text-5xl tracking-wide text-noir-ivory">
+            <i class="fa-solid fa-magnifying-glass text-noir-gold mr-3 text-3xl md:text-4xl"></i>
+            Crime Scene <span class="text-noir-gold">Investigation</span>
+        </h1>
+
+        <!-- Shimmer divider -->
+        <div class="mx-auto w-64 h-px shimmer-line rounded-full"></div>
+
+        <!-- Score & Progress display -->
+        <div class="flex items-center justify-center gap-6 text-sm font-sans flex-wrap">
+            <div class="flex items-center gap-2 px-4 py-2 rounded-lg bg-noir-charcoal/70 border border-noir-gold/15">
+                <i class="fa-solid fa-star text-noir-gold"></i>
+                <span class="text-noir-brass">Score:</span>
+                <span class="text-white font-bold" id="scoreValue">@Model.Score</span>
+            </div>
+            <div class="flex items-center gap-2 px-4 py-2 rounded-lg bg-noir-charcoal/70 border border-noir-gold/15">
+                <i class="fa-solid fa-fingerprint text-noir-gold"></i>
+                <span class="text-noir-brass">Clues Found:</span>
+                <span class="text-white font-bold" id="clueCount">@collectedClueIds.Count</span>
+                <span class="text-noir-brass/60">/ @clues.Count</span>
+            </div>
+            <div class="flex items-center gap-2 px-4 py-2 rounded-lg bg-noir-emerald/40 border border-green-500/15">
+                <i class="fa-solid fa-signal text-green-400"></i>
+                <span class="text-green-300 text-xs uppercase tracking-wider font-semibold">Stage: Investigation</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ══════════ CRIME SCENE TAPE BANNER ══════════ -->
+    <div class="crime-tape h-1.5 w-full rounded-full opacity-50"></div>
+
+    <!-- ══════════ CRIME SCENE DESCRIPTION ══════════ -->
+    <section id="crimeSceneSection">
+        <div class="flex items-center gap-3 mb-6">
+            <div class="w-1 h-8 bg-noir-gold rounded-full"></div>
+            <h2 class="font-serif text-xl tracking-wider text-noir-brass uppercase">Crime Scene</h2>
+        </div>
+
+        <div class="rounded-2xl border border-noir-gold/15 bg-gradient-to-br from-noir-charcoal via-noir-charcoal/95 to-noir-obsidian overflow-hidden shadow-2xl">
+            <!-- Scene description panel -->
+            <div class="p-6 md:p-8 space-y-5">
+                <div class="flex items-start gap-4">
+                    <div class="flex-shrink-0 w-14 h-14 rounded-full bg-noir-gold/10 border border-noir-gold/20 flex items-center justify-center">
+                        <i class="fa-solid fa-building-columns text-xl text-noir-gold"></i>
+                    </div>
+                    <div class="space-y-2">
+                        <h3 class="font-serif text-lg text-white">Scene Overview</h3>
+                        <p class="text-noir-ivory/80 font-sans text-sm md:text-base leading-relaxed">
+                            @Model.Story.CrimeSceneDescription
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Victim info -->
+                <div class="flex items-center gap-3 bg-red-950/30 rounded-xl border border-red-500/15 px-5 py-3">
+                    <div class="w-10 h-10 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                        <i class="fa-solid fa-skull text-red-400"></i>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-sans uppercase tracking-widest text-red-400/80">Victim</span>
+                        <p class="text-white font-serif text-base">@Model.Story.VictimName</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════ INTERACTIVE CRIME SCENE MAP ══════════ -->
+    <section id="crimeSceneMap">
+        <div class="flex items-center gap-3 mb-6">
+            <div class="w-1 h-8 bg-noir-gold rounded-full"></div>
+            <h2 class="font-serif text-xl tracking-wider text-noir-brass uppercase">Investigate the Scene</h2>
+            <span class="text-xs text-noir-brass/50 font-sans ml-2">(Click glowing markers to collect clues)</span>
+        </div>
+
+        <div class="crime-scene-area relative rounded-2xl border border-noir-gold/15 bg-gradient-to-br from-noir-charcoal/90 via-noir-obsidian to-noir-charcoal/80 overflow-hidden shadow-2xl"
+             style="min-height: 400px; aspect-ratio: 16/9;">
+
+            <!-- Dark atmospheric background texture -->
+            <div class="absolute inset-0 bg-gradient-to-b from-noir-gold/[0.02] via-transparent to-noir-gold/[0.02]"></div>
+
+            <!-- Grid lines overlay for investigation feel -->
+            <div class="absolute inset-0 opacity-[0.04]"
+                 style="background-image: linear-gradient(rgba(212,175,55,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(212,175,55,0.3) 1px, transparent 1px); background-size: 60px 60px;"></div>
+
+            <!-- Scene label -->
+            <div class="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-noir-obsidian/80 border border-noir-gold/20 backdrop-blur text-[10px] font-sans uppercase tracking-widest text-noir-gold z-10">
+                <i class="fa-solid fa-crosshairs"></i>
+                Active Investigation Zone
+            </div>
+
+            <!-- Location labels -->
+            <div class="absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-noir-obsidian/80 border border-noir-gold/20 backdrop-blur text-[10px] font-sans uppercase tracking-widest text-noir-brass z-10">
+                <i class="fa-solid fa-map-pin text-noir-gold"></i>
+                @clues.Select(c => c.LocationName).Distinct().Count() Locations
+            </div>
+
+            <!-- Clue Hotspot Markers -->
+            @foreach (var clue in clues)
+            {
+                var isCollected = collectedClueIds.Contains(clue.Id);
+                var markerClass = isCollected ? "hotspot-collected" : "";
+                var iconType = clue.ClueType switch {
+                    "Physical" => "fa-solid fa-fingerprint",
+                    "Document" => "fa-solid fa-file-lines",
+                    "Testimonial" => "fa-solid fa-comment-dots",
+                    _ => "fa-solid fa-circle-question"
+                };
+
+                <button class="hotspot-marker @markerClass absolute w-10 h-10 rounded-full flex items-center justify-center z-20
+                               @(isCollected
+                                   ? "bg-green-500/20 border-2 border-green-500/40"
+                                   : "bg-noir-gold/20 border-2 border-noir-gold/50 hover:bg-noir-gold/40")"
+                        style="left: @(clue.HotspotX)%; top: @(clue.HotspotY)%; transform: translate(-50%, -50%);"
+                        data-clue-id="@clue.Id"
+                        data-clue-name="@clue.Name"
+                        data-clue-location="@clue.LocationName"
+                        data-clue-hidden="@clue.IsHidden.ToString().ToLower()"
+                        data-collected="@isCollected.ToString().ToLower()"
+                        @(isCollected ? "disabled" : "")
+                        onclick="if(!this.disabled) collectClue('@clue.Id', this)"
+                        title="@(isCollected ? $"✓ {clue.Name} (Collected)" : (clue.IsHidden ? "??? Hidden Clue" : clue.LocationName))">
+
+                    <i class="@iconType text-sm @(isCollected ? "text-green-400" : "text-noir-gold")"></i>
+
+                    @if (isCollected)
+                    {
+                        <i class="fa-solid fa-check absolute -top-1 -right-1 text-[8px] text-green-400 bg-noir-obsidian rounded-full w-4 h-4 flex items-center justify-center border border-green-500/40"></i>
+                    }
+                </button>
+            }
+        </div>
+    </section>
+
+    <!-- ══════════ CLUE REVEAL PANEL ══════════ -->
+    <section id="clueRevealSection" class="hidden">
+        <div id="clueRevealPanel" class="clue-reveal rounded-2xl border border-noir-gold/15 bg-gradient-to-br from-noir-charcoal via-noir-charcoal/95 to-noir-obsidian overflow-hidden shadow-2xl">
+            <div class="p-6 md:p-8 space-y-5">
+                <!-- Header -->
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-full bg-noir-gold/10 border-2 border-noir-gold/30 flex items-center justify-center">
+                        <i class="fa-solid fa-search-plus text-xl text-noir-gold"></i>
+                    </div>
+                    <div>
+                        <h3 id="revealClueName" class="font-serif text-2xl text-white"></h3>
+                        <span class="text-[10px] font-sans uppercase tracking-widest text-noir-gold">
+                            <i class="fa-solid fa-circle text-[5px] mr-1 animate-pulse"></i>Evidence Collected
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Clue description -->
+                <div class="relative bg-noir-obsidian/60 rounded-xl border border-noir-gold/10 p-5">
+                    <div class="absolute -top-3 left-4 text-4xl text-noir-gold/20 font-serif leading-none">🔍</div>
+                    <p id="revealClueDescription" class="text-noir-ivory/90 font-sans text-sm md:text-base leading-relaxed pl-6"></p>
+                </div>
+
+                <!-- Dismiss -->
+                <div class="flex justify-end">
+                    <button onclick="dismissClueReveal()" class="flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-serif uppercase tracking-widest
+                                   border border-noir-gold/20 text-noir-brass hover:bg-noir-gold/10 hover:text-white transition-all duration-300">
+                        <i class="fa-solid fa-xmark"></i>
+                        Continue Investigation
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════ EVIDENCE INVENTORY ══════════ -->
+    <section id="inventorySection">
+        <div class="flex items-center gap-3 mb-6">
+            <div class="w-1 h-8 bg-green-500 rounded-full"></div>
+            <h2 class="font-serif text-xl tracking-wider text-noir-brass uppercase">Evidence Inventory</h2>
+            <span id="inventoryBadge" class="ml-2 w-6 h-6 rounded-full bg-noir-gold/20 border border-noir-gold/30 flex items-center justify-center text-xs font-bold text-noir-gold">
+                @collectedClueIds.Count
+            </span>
+        </div>
+
+        @if (!collectedClueIds.Any())
+        {
+            <div id="emptyInventory" class="text-center py-16 bg-noir-charcoal/40 rounded-xl border border-noir-gold/10">
+                <i class="fa-solid fa-box-open text-5xl text-noir-gold/20 mb-4"></i>
+                <p class="text-noir-brass text-sm">Your evidence bag is empty. Investigate the crime scene above to collect clues.</p>
+            </div>
+        }
+
+        <div id="inventoryGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 @(collectedClueIds.Any() ? "" : "hidden")">
+            @foreach (var item in Model.Inventory)
+            {
+                var clue = item.Clue;
+                if (clue == null) continue;
+                var iconType = clue.ClueType switch {
+                    "Physical" => "fa-solid fa-fingerprint",
+                    "Document" => "fa-solid fa-file-lines",
+                    "Testimonial" => "fa-solid fa-comment-dots",
+                    _ => "fa-solid fa-circle-question"
+                };
+
+                <div class="inv-item group relative rounded-xl border border-green-500/15 bg-gradient-to-b from-noir-charcoal/90 to-noir-obsidian/80 backdrop-blur overflow-hidden">
+                    <!-- Green accent bar -->
+                    <div class="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-green-500/40 to-transparent group-hover:via-green-500/70 transition-all duration-500"></div>
+
+                    <div class="relative p-4 space-y-3">
+                        <div class="flex items-start gap-3">
+                            <div class="flex-shrink-0 w-10 h-10 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center">
+                                <i class="@iconType text-green-400"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-serif text-sm text-white truncate">@clue.Name</h4>
+                                <span class="text-[10px] font-sans uppercase tracking-widest text-green-400/70">
+                                    <i class="fa-solid fa-map-pin text-[8px] mr-1"></i>@clue.LocationName
+                                </span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-noir-brass/70 leading-relaxed line-clamp-2">@clue.Description</p>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="mt-8 flex justify-center">
+            <a asp-action="Interrogation" asp-route-id="@Model.Id"
+               class="px-8 py-3 rounded-lg border border-red-500/30 bg-gradient-to-r from-red-500/10 to-transparent hover:from-red-500/20 text-red-400 font-serif text-sm tracking-widest uppercase transition-all duration-300">
+                <i class="fa-solid fa-microphone mr-2"></i> Confront Suspects
+            </a>
+        </div>
+    </section>
+
+    <!-- ══════════ NAVIGATION ══════════ -->
+    <nav class="pt-4 pb-8">
+        <div class="flex items-center gap-3 mb-5">
+            <div class="w-1 h-8 bg-noir-brass rounded-full"></div>
+            <h2 class="font-serif text-xl tracking-wider text-noir-brass uppercase">Case Actions</h2>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <!-- Interrogation -->
+            <a asp-action="Interrogation" asp-route-id="@Model.Id"
+               class="group flex flex-col items-center gap-3 p-5 rounded-xl border border-noir-gold/10 bg-noir-charcoal/50 backdrop-blur
+                      hover:border-noir-gold/30 hover:bg-noir-charcoal/70 transition-all duration-300">
+                <div class="w-12 h-12 rounded-full bg-noir-gold/10 border border-noir-gold/15 flex items-center justify-center group-hover:bg-noir-gold/20 transition-colors duration-300">
+                    <i class="fa-solid fa-comments text-noir-gold"></i>
+                </div>
+                <span class="font-serif text-xs uppercase tracking-widest text-noir-brass group-hover:text-white transition-colors duration-300">Interrogation</span>
+            </a>
+
+            <!-- Evidence Board -->
+            <a asp-action="EvidenceBoard" asp-route-id="@Model.Id"
+               class="group flex flex-col items-center gap-3 p-5 rounded-xl border border-noir-gold/10 bg-noir-charcoal/50 backdrop-blur
+                      hover:border-noir-gold/30 hover:bg-noir-charcoal/70 transition-all duration-300">
+                <div class="w-12 h-12 rounded-full bg-noir-gold/10 border border-noir-gold/15 flex items-center justify-center group-hover:bg-noir-gold/20 transition-colors duration-300">
+                    <i class="fa-solid fa-diagram-project text-noir-gold"></i>
+                </div>
+                <span class="font-serif text-xs uppercase tracking-widest text-noir-brass group-hover:text-white transition-colors duration-300">Evidence Board</span>
+            </a>
+
+            <!-- Puzzles -->
+            <a asp-action="Puzzles" asp-route-id="@Model.Id"
+               class="group flex flex-col items-center gap-3 p-5 rounded-xl border border-noir-gold/10 bg-noir-charcoal/50 backdrop-blur
+                      hover:border-noir-gold/30 hover:bg-noir-charcoal/70 transition-all duration-300">
+                <div class="w-12 h-12 rounded-full bg-noir-gold/10 border border-noir-gold/15 flex items-center justify-center group-hover:bg-noir-gold/20 transition-colors duration-300">
+                    <i class="fa-solid fa-puzzle-piece text-noir-gold"></i>
+                </div>
+                <span class="font-serif text-xs uppercase tracking-widest text-noir-brass group-hover:text-white transition-colors duration-300">Puzzles</span>
+            </a>
+
+            <!-- Accuse -->
+            <a asp-action="Accuse" asp-route-id="@Model.Id"
+               class="group flex flex-col items-center gap-3 p-5 rounded-xl border border-red-500/15 bg-noir-charcoal/50 backdrop-blur
+                      hover:border-red-500/30 hover:bg-red-950/20 transition-all duration-300">
+                <div class="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/15 flex items-center justify-center group-hover:bg-red-500/20 transition-colors duration-300">
+                    <i class="fa-solid fa-gavel text-red-400"></i>
+                </div>
+                <span class="font-serif text-xs uppercase tracking-widest text-red-400/80 group-hover:text-red-300 transition-colors duration-300">Make Accusation</span>
+            </a>
+        </div>
+    </nav>
+</div>
+
+<!-- ─────────────────── LOADING OVERLAY ─────────────────── -->
+<div id="loadingOverlay" class="hidden fixed inset-0 z-50 bg-noir-obsidian/80 backdrop-blur-sm flex items-center justify-center">
+    <div class="flex flex-col items-center gap-4">
+        <div class="w-12 h-12 border-2 border-noir-gold/20 border-t-noir-gold rounded-full animate-spin"></div>
+        <span class="font-serif text-sm uppercase tracking-widest text-noir-gold">Collecting evidence…</span>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // ─────────────────── URLS ───────────────────
+    const collectClueUrl = '@Url.Action("CollectClueJson", "Gameplay")';
+    const progressId     = '@Model.Id';
+    let totalClues       = @clues.Count;
+    let collectedCount   = @collectedClueIds.Count;
+    // Track collected IDs for verification
+    let collectedIds     = @Html.Raw(Json.Serialize(collectedClueIds));
+
+    // ─────────────────── GSAP ENTRANCE ───────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+        // Header entrance
+        gsap.from('#pageHeader', {
+            y: -40, opacity: 0, duration: 0.8,
+            ease: 'power3.out'
+        });
+
+        // Crime scene section
+        gsap.from('#crimeSceneSection', {
+            y: 50, opacity: 0, duration: 0.7,
+            ease: 'power2.out', delay: 0.2
+        });
+
+        // Crime scene map
+        gsap.from('#crimeSceneMap', {
+            y: 40, opacity: 0, duration: 0.7,
+            ease: 'power2.out', delay: 0.4
+        });
+
+        // Hotspot markers stagger in
+        gsap.from('.hotspot-marker', {
+            scale: 0, opacity: 0, duration: 0.5,
+            stagger: 0.1, ease: 'back.out(1.7)', delay: 0.8
+        });
+
+        // Inventory section
+        gsap.from('#inventorySection', {
+            y: 40, opacity: 0, duration: 0.6,
+            ease: 'power2.out', delay: 0.6
+        });
+
+        // Inventory items
+        gsap.from('.inv-item', {
+            y: 30, opacity: 0, duration: 0.5,
+            stagger: 0.08, ease: 'power2.out', delay: 0.8
+        });
+
+        // Nav links stagger in
+        gsap.from('nav a', {
+            y: 30, opacity: 0, duration: 0.5,
+            stagger: 0.08, ease: 'power2.out', delay: 1.0
+        });
+    });
+
+    // ─────────────────── COLLECT CLUE ───────────────────
+    async function collectClue(clueId, buttonEl) {
+        const overlay = document.getElementById('loadingOverlay');
+        overlay.classList.remove('hidden');
+
+        try {
+            const formData = new FormData();
+            formData.append('progressId', progressId);
+            formData.append('clueId', clueId);
+
+            const response = await fetch(collectClueUrl, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                }
+            });
+
+            const data = await response.json();
+            overlay.classList.add('hidden');
+
+            if (data.success) {
+                // Mark hotspot as collected
+                buttonEl.classList.add('hotspot-collected');
+                buttonEl.disabled = true;
+                buttonEl.querySelector('i').className = 'fa-solid fa-check text-sm text-green-400';
+
+                // Add check badge
+                const checkBadge = document.createElement('i');
+                checkBadge.className = 'fa-solid fa-check absolute -top-1 -right-1 text-[8px] text-green-400 bg-noir-obsidian rounded-full w-4 h-4 flex items-center justify-center border border-green-500/40';
+                buttonEl.appendChild(checkBadge);
+
+                // Update counter
+                collectedCount++;
+                collectedIds.push(clueId);
+                document.getElementById('clueCount').textContent = collectedCount;
+                document.getElementById('inventoryBadge').textContent = collectedCount;
+
+                // Show clue reveal panel
+                showClueReveal(data.name, data.description);
+
+                // Add item to inventory grid
+                addInventoryItem(data.name, data.description, clueId);
+
+                // Show success toast
+                showToast(`Evidence collected: ${data.name}`, 'success');
+
+                // Play a subtle GSAP pop on the button
+                gsap.fromTo(buttonEl, { scale: 1.4 }, { scale: 1, duration: 0.4, ease: 'elastic.out(1, 0.4)' });
+
+            } else {
+                showToast(data.message || 'Could not collect clue.', 'error');
+            }
+        } catch (err) {
+            overlay.classList.add('hidden');
+            showToast('Network error. Try again.', 'error');
+            console.error('Collect clue error:', err);
+        }
+    }
+
+    // ─────────────────── SHOW CLUE REVEAL ───────────────────
+    function showClueReveal(name, description) {
+        const section = document.getElementById('clueRevealSection');
+        const panel   = document.getElementById('clueRevealPanel');
+
+        document.getElementById('revealClueName').textContent = name;
+        document.getElementById('revealClueDescription').textContent = description;
+
+        section.classList.remove('hidden');
+
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                panel.classList.add('active');
+            });
+        });
+
+        section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // GSAP emphasis
+        gsap.from('#clueRevealPanel', {
+            scale: 0.95, duration: 0.5, ease: 'power2.out'
+        });
+    }
+
+    // ─────────────────── DISMISS CLUE REVEAL ───────────────────
+    function dismissClueReveal() {
+        const panel   = document.getElementById('clueRevealPanel');
+        const section = document.getElementById('clueRevealSection');
+
+        panel.classList.remove('active');
+
+        setTimeout(() => {
+            section.classList.add('hidden');
+            document.getElementById('crimeSceneMap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 500);
+    }
+
+    // ─────────────────── ADD INVENTORY ITEM ───────────────────
+    function addInventoryItem(name, description, clueId) {
+        // Hide empty state if visible
+        const emptyState = document.getElementById('emptyInventory');
+        if (emptyState) emptyState.classList.add('hidden');
+
+        const grid = document.getElementById('inventoryGrid');
+        grid.classList.remove('hidden');
+
+        const card = document.createElement('div');
+        card.className = 'inv-item group relative rounded-xl border border-green-500/15 bg-gradient-to-b from-noir-charcoal/90 to-noir-obsidian/80 backdrop-blur overflow-hidden';
+        card.innerHTML = `
+            <div class="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-green-500/40 to-transparent group-hover:via-green-500/70 transition-all duration-500"></div>
+            <div class="relative p-4 space-y-3">
+                <div class="flex items-start gap-3">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center">
+                        <i class="fa-solid fa-fingerprint text-green-400"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-serif text-sm text-white truncate">${name}</h4>
+                        <span class="text-[10px] font-sans uppercase tracking-widest text-green-400/70">
+                            <i class="fa-solid fa-check-circle text-[8px] mr-1"></i>Just Collected
+                        </span>
+                    </div>
+                </div>
+                <p class="text-xs text-noir-brass/70 leading-relaxed line-clamp-2">${description}</p>
+            </div>
+        `;
+        grid.appendChild(card);
+
+        // GSAP entrance for new card
+        gsap.from(card, {
+            y: 30, opacity: 0, scale: 0.95,
+            duration: 0.5, ease: 'power2.out'
+        });
+    }
+
+    // ─────────────────── TOAST NOTIFICATION ───────────────────
+    function showToast(message, type) {
+        const toast = document.createElement('div');
+        const isError = type === 'error';
+        toast.className = `fixed bottom-6 right-6 z-[999] flex items-center gap-3 px-5 py-3 rounded-lg border shadow-2xl
+                           font-sans text-sm transition-all duration-500 transform translate-y-4 opacity-0
+                           ${isError
+                               ? 'bg-red-950/90 border-red-500/30 text-red-300'
+                               : 'bg-noir-forest/90 border-green-500/30 text-green-300'}`;
+        toast.innerHTML = `<i class="fa-solid ${isError ? 'fa-circle-exclamation' : 'fa-circle-check'}"></i><span>${message}</span>`;
+        document.body.appendChild(toast);
+
+        requestAnimationFrame(() => {
+            toast.classList.remove('translate-y-4', 'opacity-0');
+        });
+
+        setTimeout(() => {
+            toast.classList.add('translate-y-4', 'opacity-0');
+            setTimeout(() => toast.remove(), 500);
+        }, 4000);
+    }
+
+</script>
+}
