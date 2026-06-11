@@ -7,7 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CaseForgeAI.Infrastructure.Data;
 using CaseForgeAI.Models;
-
+using Microsoft.Extensions.Caching.Memory;
+using System.Collections.Generic;
 namespace CaseForgeAI.Controllers
 {
     public class HomeController : Controller
@@ -21,6 +22,7 @@ namespace CaseForgeAI.Controllers
             _cache = cache;
         }
 
+        [ResponseCache(Duration = 15, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> Index()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -57,8 +59,7 @@ namespace CaseForgeAI.Controllers
                     })
                     .ToListAsync();
 
-                var cacheSeconds = _context.Database.GetDbConnection().ConnectionString != null ?
-                    (int)(_cache as Microsoft.Extensions.Caching.Memory.MemoryCache).Options?.SizeLimit ?? 30 : 30; // fallback
+
                 // Use configuration value
                 var configSeconds = 30; // default if config read fails
                 // We'll read from configuration later; for now use default 30 seconds
@@ -132,14 +133,7 @@ namespace CaseForgeAI.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        // Apply caching to static pages
-        [ResponseCache(Duration = 15, Location = ResponseCacheLocation.Client, NoStore = false)]
-        public async Task<IActionResult> Index()
-        {
-            // This method is already defined above with caching logic
-            // The attribute ensures client‑side caching as well
-            return await Index();
-        }
+
     }
 
     public class HomeViewModel

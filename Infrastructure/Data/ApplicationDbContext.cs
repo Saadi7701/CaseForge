@@ -83,10 +83,11 @@ namespace CaseForgeAI.Infrastructure.Data
                 .WithMany()
                 .HasForeignKey(i => i.ClueId)
                 .OnDelete(DeleteBehavior.NoAction);
-        }
+
             // Performance indexes
             builder.Entity<PlayerProgress>().HasIndex(p => p.UserId);
             builder.Entity<Analytics>().HasIndex(a => a.StoryId);
             builder.Entity<ApplicationUser>().HasIndex(u => u.TotalScore);
+        }
     }
 }
