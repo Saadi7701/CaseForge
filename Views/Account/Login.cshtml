@@ -14,9 +14,28 @@
         <div asp-validation-summary="ModelOnly" class="text-red-400 text-xs text-center"></div>
 
         <form asp-action="Login" method="post" class="space-y-5">
-            <div>
-                <input type="hidden" asp-for="Email" value="admin77s@gmail.com" />
-                <input type="hidden" asp-for="Password" value="Detectivex77" />
+            <!-- Email -->
+            <div class="form-field">
+                <label asp-for="Email" class="text-xs uppercase tracking-widest text-noir-brass font-serif">Email Address</label>
+                <div class="relative mt-1">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-noir-brass/50 text-sm"><i class="fa-solid fa-envelope"></i></span>
+                    <input asp-for="Email" type="email"
+                           class="w-full pl-10 pr-4 py-3 bg-noir-obsidian/80 border border-noir-gold/20 rounded text-noir-ivory placeholder:text-noir-brass/40 focus:border-noir-gold focus:outline-none focus:shadow-[0_0_10px_rgba(212,175,55,0.2)] transition text-sm"
+                           placeholder="detective@caseforge.com" />
+                </div>
+                <span asp-validation-for="Email" class="text-red-400 text-xs"></span>
+            </div>
+
+            <!-- Password -->
+            <div class="form-field">
+                <label asp-for="Password" class="text-xs uppercase tracking-widest text-noir-brass font-serif">Password</label>
+                <div class="relative mt-1">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-noir-brass/50 text-sm"><i class="fa-solid fa-lock"></i></span>
+                    <input asp-for="Password" type="password"
+                           class="w-full pl-10 pr-4 py-3 bg-noir-obsidian/80 border border-noir-gold/20 rounded text-noir-ivory placeholder:text-noir-brass/40 focus:border-noir-gold focus:outline-none focus:shadow-[0_0_10px_rgba(212,175,55,0.2)] transition text-sm"
+                           placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
+                </div>
+                <span asp-validation-for="Password" class="text-red-400 text-xs"></span>
             </div>
             <div class="flex items-center space-x-2">
                 <input asp-for="RememberMe" type="checkbox" class="accent-noir-gold w-4 h-4" />
