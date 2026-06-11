@@ -24,7 +24,10 @@ namespace CaseForgeAI.Services
         {
             _configuration = configuration;
             _logger = logger;
-            _apiKey = _configuration["OpenRouter:ApiKey"] ?? _configuration["OPENROUTER_API_KEY"] ?? string.Empty;
+            var key1 = _configuration["OpenRouter:ApiKey"];
+            var key2 = _configuration["OPENROUTER_API_KEY"];
+            _apiKey = !string.IsNullOrWhiteSpace(key1) ? key1 : 
+                      (!string.IsNullOrWhiteSpace(key2) ? key2 : string.Empty);
             _baseUrl = _configuration["OpenRouter:BaseUrl"] ?? "https://openrouter.ai/api/v1";
             _defaultModel = _configuration["OpenRouter:DefaultModel"] ?? "openrouter/auto";
 
