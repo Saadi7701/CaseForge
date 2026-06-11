@@ -59,14 +59,14 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
             
             <!-- Logo / Brand -->
-            <a asp-controller="Home" asp-action="Index" class="flex items-center space-x-3 group">
-                <i class="fa-solid fa-magnifying-glass-chart text-noir-gold text-2xl group-hover:scale-110 transition duration-300"></i>
-                <span class="font-serif text-xl tracking-widest text-noir-gold font-bold group-hover:text-white transition duration-300">
-                    CASEFORGE <span class="text-white font-sans text-xs tracking-normal bg-noir-gold/20 px-2 py-0.5 rounded border border-noir-gold/30 ml-1">AI</span>
+            <a asp-controller="Home" asp-action="Index" class="flex items-center space-x-2 sm:space-x-3 group">
+                <i class="fa-solid fa-magnifying-glass-chart text-noir-gold text-xl sm:text-2xl group-hover:scale-110 transition duration-300"></i>
+                <span class="font-serif text-lg sm:text-xl tracking-widest text-noir-gold font-bold group-hover:text-white transition duration-300">
+                    CASEFORGE <span class="hidden sm:inline-block text-white font-sans text-xs tracking-normal bg-noir-gold/20 px-2 py-0.5 rounded border border-noir-gold/30 ml-1">AI</span>
                 </span>
             </a>
 
-            <!-- Nav Links -->
+            <!-- Desktop Nav Links -->
             <nav class="hidden md:flex space-x-8 text-sm font-semibold tracking-wider uppercase font-serif">
                 <a asp-controller="Home" asp-action="Index" hx-get="/Home/Index" hx-push-url="/Home/Index" hx-target="#main-content" class="text-noir-brass hover:text-white transition py-2 border-b-2 border-transparent hover:border-noir-gold">Lobby</a>
                 @if (SignInManager.IsSignedIn(User))
@@ -80,8 +80,8 @@
                 }
             </nav>
 
-            <!-- Authentication Section -->
-            <div class="flex items-center space-x-4">
+            <!-- Authentication Section (Desktop) / Hamburger (Mobile) -->
+            <div class="flex items-center space-x-2 sm:space-x-4">
                 @if (SignInManager.IsSignedIn(User))
                 {
                     var currentUser = await UserManager.GetUserAsync(User);
@@ -91,21 +91,53 @@
                         <span class="text-[10px] text-noir-gold"><i class="fa-solid fa-medal mr-1"></i>Score: @currentUser?.TotalScore</span>
                     </a>
                     
-                    <a asp-controller="Account" asp-action="Logout" class="px-4 py-2 border border-noir-gold/40 rounded text-xs font-serif uppercase tracking-widest text-noir-gold hover:bg-noir-gold hover:text-noir-obsidian hover:shadow-[0_0_15px_rgba(212,175,55,0.4)] transition duration-300">
+                    <a asp-controller="Account" asp-action="Logout" class="hidden md:inline-block px-4 py-2 border border-noir-gold/40 rounded text-xs font-serif uppercase tracking-widest text-noir-gold hover:bg-noir-gold hover:text-noir-obsidian hover:shadow-[0_0_15px_rgba(212,175,55,0.4)] transition duration-300">
                         Sign Out
                     </a>
                 }
                 else
                 {
-                    <a asp-controller="Account" asp-action="Login" class="text-xs font-serif uppercase tracking-widest text-noir-brass hover:text-white transition duration-300">
+                    <a asp-controller="Account" asp-action="Login" class="hidden sm:inline-block text-xs font-serif uppercase tracking-widest text-noir-brass hover:text-white transition duration-300">
                         Login
                     </a>
-                    <a asp-controller="Account" asp-action="Register" class="px-4 py-2 bg-gradient-to-r from-noir-bronze to-noir-gold text-noir-obsidian text-xs font-serif font-bold uppercase tracking-widest rounded hover:shadow-[0_0_15px_rgba(212,175,55,0.5)] hover:scale-105 transition duration-300">
+                    <a asp-controller="Account" asp-action="Register" class="hidden sm:inline-block px-4 py-2 bg-gradient-to-r from-noir-bronze to-noir-gold text-noir-obsidian text-xs font-serif font-bold uppercase tracking-widest rounded hover:shadow-[0_0_15px_rgba(212,175,55,0.5)] hover:scale-105 transition duration-300">
                         Enlist
                     </a>
                 }
+                
+                <!-- Mobile Menu Button -->
+                <button id="mobileMenuBtn" class="md:hidden text-noir-gold text-2xl p-2 focus:outline-none">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
             </div>
         </div>
+
+        <!-- Mobile Menu Dropdown -->
+        <div id="mobileMenu" class="hidden md:hidden bg-noir-charcoal/95 border-b border-noir-gold/20 shadow-lg px-4 py-4 space-y-4 text-center font-serif uppercase tracking-widest text-sm">
+            <a asp-controller="Home" asp-action="Index" class="block text-noir-brass hover:text-white transition py-2 border-b border-white/5">Lobby</a>
+            @if (SignInManager.IsSignedIn(User))
+            {
+                <a asp-controller="Home" asp-action="Profile" class="block text-noir-brass hover:text-white transition py-2 border-b border-white/5">My Profile</a>
+                if (User.IsInRole("Admin"))
+                {
+                    <a asp-controller="Admin" asp-action="Index" class="block text-noir-brass hover:text-white transition py-2 border-b border-white/5">AI Editor</a>
+                    <a asp-controller="Dashboard" asp-action="Index" class="block text-noir-brass hover:text-white transition py-2 border-b border-white/5">Admin Analytics</a>
+                }
+                <a asp-controller="Account" asp-action="Logout" class="block text-noir-gold font-bold transition py-2">Sign Out</a>
+            }
+            else
+            {
+                <a asp-controller="Account" asp-action="Login" class="block text-noir-brass hover:text-white transition py-2 border-b border-white/5">Login</a>
+                <a asp-controller="Account" asp-action="Register" class="block text-noir-gold font-bold transition py-2">Enlist</a>
+            }
+        </div>
+        
+        <script>
+            document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+                const menu = document.getElementById('mobileMenu');
+                menu.classList.toggle('hidden');
+            });
+        </script>
     </header>
 
     <!-- Main Container -->

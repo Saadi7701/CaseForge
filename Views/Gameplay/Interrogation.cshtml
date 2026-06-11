@@ -150,7 +150,7 @@
         }
         else
         {
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 @foreach (var suspect in suspects)
                 {
                     <div class="suspect-card group relative rounded-xl border border-noir-gold/10 bg-gradient-to-b from-noir-charcoal/90 to-noir-obsidian/80 backdrop-blur overflow-hidden"
@@ -165,7 +165,7 @@
                         <div class="relative p-5 space-y-4">
 
                             <!-- Avatar & Identity -->
-                            <div class="flex items-start gap-4">
+                            <div class="flex flex-col md:flex-row gap-6">
                                 <!-- Avatar circle -->
                                 <div class="relative flex-shrink-0">
                                     <div class="w-16 h-16 rounded-full bg-noir-charcoal border-2 border-noir-gold/20 flex items-center justify-center group-hover:border-noir-gold/50 transition-colors duration-300 overflow-hidden">
@@ -195,7 +195,7 @@
                             </p>
 
                             <!-- Divider -->
-                            <div class="w-full h-px bg-gradient-to-r from-transparent via-noir-gold/15 to-transparent"></div>
+                            <div class="overflow-x-auto"><table class="w-full table-auto border-collapse">nt-to-r from-transparent via-noir-gold/15 to-transparent"></div>
 
                             <!-- Interrogate and Accuse buttons -->
                             <div class="grid grid-cols-2 gap-2">
