@@ -86,7 +86,7 @@ using (var scope = app.Services.CreateScope())
 
         // Seed Admin User
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-        var adminEmail = "admin@caseforge.com";
+        var adminEmail = "admin77s@gmail.com";
         var adminUser = userManager.FindByEmailAsync(adminEmail).Result;
         if (adminUser == null)
         {
@@ -98,7 +98,7 @@ using (var scope = app.Services.CreateScope())
                 DetectiveRank = "Master Detective",
                 EmailConfirmed = true
             };
-            var createAdmin = userManager.CreateAsync(user, "NoirAdmin123!").Result;
+            var createAdmin = userManager.CreateAsync(user, "Detectivex77").Result;
             if (createAdmin.Succeeded)
             {
                 userManager.AddToRoleAsync(user, "Admin").Wait();
